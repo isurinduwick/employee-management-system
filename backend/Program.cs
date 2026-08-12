@@ -22,6 +22,25 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
+// Turns any unhandled exception into the same RFC 9110 problem+json shape the API
+// already returns for things like 404s, instead of a raw stack trace or a plain 500.
+builder.Services.AddProblemDetails();
+
+// Browsers block cross-origin requests by default (CORS is enforced client-side,
+// which is why Postman/curl never hit this) — the React dev server runs on a
+// different origin than this API, so it needs to be allow-listed explicitly.
+// Not relevant to the mobile app: CORS is a browser-only restriction.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? Array.Empty<string>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ReactApp", policy =>
+        policy.WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
+
 builder.Services.AddSingleton<JwtTokenGenerator>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -44,6 +63,9 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// First in the pipeline, so it can catch exceptions thrown by anything after it.
+app.UseExceptionHandler();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -52,6 +74,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("ReactApp");
 
 // Authentication must run before Authorization: it determines *who* the caller is
 // (validates the JWT into a ClaimsPrincipal) before Authorization decides what they can do.
