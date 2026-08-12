@@ -35,4 +35,22 @@ public class DepartmentsController : ControllerBase
 
         return Ok(departments);
     }
+
+    // GET /api/departments/5 — any authenticated role. Same projection as GetAll,
+    // just narrowed to one row, so EmployeeCount stays a SQL aggregate here too.
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<DepartmentResponseDto>> GetById(int id)
+    {
+        var department = await _db.Departments
+            .Where(d => d.Id == id)
+            .Select(d => new DepartmentResponseDto
+            {
+                Id = d.Id,
+                Name = d.Name,
+                EmployeeCount = d.Employees.Count
+            })
+            .FirstOrDefaultAsync();
+
+        return department is null ? NotFound() : Ok(department);
+    }
 }
