@@ -86,6 +86,38 @@ public class AttendanceController : ControllerBase
         return Ok(ToResponseDto(log, CurrentEmployeeName));
     }
 
+    // GET /api/attendance?employeeId=&departmentId=&startDate=&endDate= — the
+    // "queryable attendance history" requirement. An Employee can only ever see
+    // their own history: employeeId/departmentId from the query string are ignored
+    // for that role rather than trusted, since the caller could pass anyone's id.
+    // Manager/Admin can filter freely across the whole company.
+    [HttpGet]
+    public async Task<ActionResult<List<AttendanceResponseDto>>> GetAll(
+        [FromQuery] int? employeeId,
+        [FromQuery] int? departmentId,
+        [FromQuery] DateOnly? startDate,
+        [FromQuery] DateOnly? endDate)
+    {
+        var query = _db.AttendanceLogs.Include(a => a.Employee).AsQueryable();
+
+        if (User.IsInRole("Employee"))
+        {
+            query = query.Where(a => a.EmployeeId == CurrentEmployeeId);
+        }
+        else
+        {
+            if (employeeId.HasValue) query = query.Where(a => a.EmployeeId == employeeId.Value);
+            if (departmentId.HasValue) query = query.Where(a => a.Employee.DepartmentId == departmentId.Value);
+        }
+
+        if (startDate.HasValue) query = query.Where(a => a.WorkDate >= startDate.Value);
+        if (endDate.HasValue) query = query.Where(a => a.WorkDate <= endDate.Value);
+
+        var logs = await query.OrderByDescending(a => a.WorkDate).ToListAsync();
+
+        return Ok(logs.Select(l => ToResponseDto(l, $"{l.Employee.FirstName} {l.Employee.LastName}")));
+    }
+
     private static AttendanceResponseDto ToResponseDto(AttendanceLog log, string employeeName) => new()
     {
         Id = log.Id,
