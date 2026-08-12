@@ -73,4 +73,25 @@ public class DepartmentsController : ControllerBase
         var response = new DepartmentResponseDto { Id = department.Id, Name = department.Name, EmployeeCount = 0 };
         return Created($"/api/departments/{department.Id}", response);
     }
+
+    // PUT /api/departments/5 — Admin only. Excludes the department's own row from the
+    // duplicate-name check, so saving with its existing name doesn't false-positive as a conflict.
+    [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<DepartmentResponseDto>> Update(int id, DepartmentUpdateDto dto)
+    {
+        var department = await _db.Departments.FindAsync(id);
+        if (department is null) return NotFound();
+
+        if (await _db.Departments.AnyAsync(d => d.Name == dto.Name && d.Id != id))
+        {
+            return Conflict($"Department '{dto.Name}' already exists.");
+        }
+
+        department.Name = dto.Name;
+        await _db.SaveChangesAsync();
+
+        var employeeCount = await _db.Employees.CountAsync(e => e.DepartmentId == id);
+        return Ok(new DepartmentResponseDto { Id = department.Id, Name = department.Name, EmployeeCount = employeeCount });
+    }
 }
