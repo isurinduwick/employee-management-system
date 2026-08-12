@@ -1,5 +1,6 @@
 using backend.Data;
 using backend.DTOs.Departments;
+using backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -52,5 +53,24 @@ public class DepartmentsController : ControllerBase
             .FirstOrDefaultAsync();
 
         return department is null ? NotFound() : Ok(department);
+    }
+
+    // POST /api/departments — Admin only. Checked here (not left to the DB's unique
+    // index alone) so a duplicate name returns a clean 409, not a raw SQL exception.
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<DepartmentResponseDto>> Create(DepartmentCreateDto dto)
+    {
+        if (await _db.Departments.AnyAsync(d => d.Name == dto.Name))
+        {
+            return Conflict($"Department '{dto.Name}' already exists.");
+        }
+
+        var department = new Department { Name = dto.Name };
+        _db.Departments.Add(department);
+        await _db.SaveChangesAsync();
+
+        var response = new DepartmentResponseDto { Id = department.Id, Name = department.Name, EmployeeCount = 0 };
+        return Created($"/api/departments/{department.Id}", response);
     }
 }
