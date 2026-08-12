@@ -94,4 +94,24 @@ public class DepartmentsController : ControllerBase
         var employeeCount = await _db.Employees.CountAsync(e => e.DepartmentId == id);
         return Ok(new DepartmentResponseDto { Id = department.Id, Name = department.Name, EmployeeCount = employeeCount });
     }
+
+    // DELETE /api/departments/5 — Admin only. Employee.DepartmentId uses
+    // DeleteBehavior.Restrict, so the DB would reject this anyway with a raw SQL
+    // error; checking here first turns that into a clean, readable 409 instead.
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var department = await _db.Departments.FindAsync(id);
+        if (department is null) return NotFound();
+
+        if (await _db.Employees.AnyAsync(e => e.DepartmentId == id))
+        {
+            return Conflict("Cannot delete a department that still has employees assigned to it.");
+        }
+
+        _db.Departments.Remove(department);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
 }
