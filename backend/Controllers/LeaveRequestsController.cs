@@ -87,6 +87,42 @@ public class LeaveRequestsController : ControllerBase
             l.ApprovedBy is null ? null : $"{l.ApprovedBy.FirstName} {l.ApprovedBy.LastName}")));
     }
 
+    // PUT /api/leave-requests/5/decision — Manager or Admin. A Manager may only decide
+    // on their own direct reports' requests (checked via Employee.ManagerId); Admin can
+    // decide on anyone's. One decision per request — a second call is rejected with 409.
+    [HttpPut("{id:int}/decision")]
+    [Authorize(Roles = "Manager,Admin")]
+    public async Task<ActionResult<LeaveResponseDto>> Decide(int id, LeaveDecisionDto dto)
+    {
+        if (dto.Status == LeaveStatus.Pending)
+        {
+            return BadRequest("Decision must be Approved or Rejected.");
+        }
+
+        var leaveRequest = await _db.LeaveRequests
+            .Include(l => l.Employee)
+            .FirstOrDefaultAsync(l => l.Id == id);
+
+        if (leaveRequest is null) return NotFound();
+
+        if (leaveRequest.Status != LeaveStatus.Pending)
+        {
+            return Conflict("This leave request has already been decided.");
+        }
+
+        if (User.IsInRole("Manager") && leaveRequest.Employee.ManagerId != CurrentEmployeeId)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, "You can only decide on your own team's leave requests.");
+        }
+
+        leaveRequest.Status = dto.Status;
+        leaveRequest.ApprovedById = CurrentEmployeeId;
+        await _db.SaveChangesAsync();
+
+        var employeeName = $"{leaveRequest.Employee.FirstName} {leaveRequest.Employee.LastName}";
+        return Ok(ToResponseDto(leaveRequest, employeeName, CurrentEmployeeName));
+    }
+
     private static LeaveResponseDto ToResponseDto(LeaveRequest request, string employeeName, string? approvedByName) => new()
     {
         Id = request.Id,
