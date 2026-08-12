@@ -1,0 +1,27 @@
+## .NET build artifacts
+bin/
+obj/
+out/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+
+## Rider / JetBrains
+.idea/
+
+## VS Code
+.vscode/
+
+## Environment / secrets
+appsettings.*.local.json
+*.env
+.env
+
+## Logs
+*.log
+
+## OS files
+.DS_Store
+Thumbs.db
