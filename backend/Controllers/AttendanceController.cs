@@ -59,6 +59,33 @@ public class AttendanceController : ControllerBase
         return Created($"/api/attendance/{log.Id}", ToResponseDto(log, CurrentEmployeeName));
     }
 
+    // POST /api/attendance/check-out — updates today's existing row (from check-in),
+    // it never creates a new one; that's what the unique (EmployeeId, WorkDate) index enforces.
+    [HttpPost("check-out")]
+    public async Task<ActionResult<AttendanceResponseDto>> CheckOut()
+    {
+        var employeeId = CurrentEmployeeId;
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var log = await _db.AttendanceLogs
+            .FirstOrDefaultAsync(a => a.EmployeeId == employeeId && a.WorkDate == today);
+
+        if (log is null)
+        {
+            return BadRequest("You haven't checked in today.");
+        }
+
+        if (log.CheckOutTime is not null)
+        {
+            return Conflict("Already checked out today.");
+        }
+
+        log.CheckOutTime = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return Ok(ToResponseDto(log, CurrentEmployeeName));
+    }
+
     private static AttendanceResponseDto ToResponseDto(AttendanceLog log, string employeeName) => new()
     {
         Id = log.Id,
