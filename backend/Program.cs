@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using backend.Data;
 using backend.Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -15,7 +16,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddControllers();
+// Serialize enums (Role, LeaveType, etc.) as their string names (e.g. "Employee"),
+// not the default numeric value — readable in requests, responses, and Swagger.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddSingleton<JwtTokenGenerator>();
 
