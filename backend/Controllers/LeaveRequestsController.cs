@@ -4,6 +4,7 @@ using backend.DTOs.Leave;
 using backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers;
 
@@ -49,6 +50,41 @@ public class LeaveRequestsController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Created($"/api/leave-requests/{leaveRequest.Id}", ToResponseDto(leaveRequest, CurrentEmployeeName, null));
+    }
+
+    // GET /api/leave-requests?employeeId=&status= — an Employee only ever sees their
+    // own requests (employeeId from the query string is ignored for that role, same
+    // rule as Attendance's history endpoint); Manager/Admin can filter across everyone.
+    [HttpGet]
+    public async Task<ActionResult<List<LeaveResponseDto>>> GetAll(
+        [FromQuery] int? employeeId,
+        [FromQuery] LeaveStatus? status)
+    {
+        var query = _db.LeaveRequests
+            .Include(l => l.Employee)
+            .Include(l => l.ApprovedBy)
+            .AsQueryable();
+
+        if (User.IsInRole("Employee"))
+        {
+            query = query.Where(l => l.EmployeeId == CurrentEmployeeId);
+        }
+        else if (employeeId.HasValue)
+        {
+            query = query.Where(l => l.EmployeeId == employeeId.Value);
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(l => l.Status == status.Value);
+        }
+
+        var requests = await query.OrderByDescending(l => l.AppliedOn).ToListAsync();
+
+        return Ok(requests.Select(l => ToResponseDto(
+            l,
+            $"{l.Employee.FirstName} {l.Employee.LastName}",
+            l.ApprovedBy is null ? null : $"{l.ApprovedBy.FirstName} {l.ApprovedBy.LastName}")));
     }
 
     private static LeaveResponseDto ToResponseDto(LeaveRequest request, string employeeName, string? approvedByName) => new()
