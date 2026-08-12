@@ -19,6 +19,10 @@ public class AuthController : ControllerBase
         _tokenGenerator = tokenGenerator;
     }
 
+    // POST /api/auth/login — the only public endpoint in the whole API; everything
+    // else requires the token this returns. Deliberately vague on failure ("Invalid
+    // email or password") rather than saying which one was wrong, so a caller can't
+    // use the error message to figure out which emails exist in the system.
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponseDto>> Login(LoginRequestDto request)
     {
@@ -29,6 +33,8 @@ public class AuthController : ControllerBase
             return Unauthorized("Invalid email or password.");
         }
 
+        // The token carries everything downstream code needs (id, name, role) — no
+        // session is stored server-side, so nothing else here needs to be remembered.
         var (token, expiresAt) = _tokenGenerator.GenerateToken(employee);
 
         return Ok(new LoginResponseDto
