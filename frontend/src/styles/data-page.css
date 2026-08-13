@@ -160,3 +160,67 @@
 .link-button.danger {
   color: var(--error);
 }
+
+/* Status badges — shared by Employees (active/inactive) and Leave
+   (pending/approved/rejected) so both use one consistent visual language. */
+.status-pill {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+
+.status-pill.active,
+.status-pill.approved {
+  color: #2e7d46;
+  background: color-mix(in srgb, #2e7d46 14%, transparent);
+}
+
+.status-pill.inactive {
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--text-muted) 14%, transparent);
+}
+
+.status-pill.pending {
+  color: #97671b;
+  background: color-mix(in srgb, #97671b 14%, transparent);
+}
+
+.status-pill.rejected {
+  color: var(--error);
+  background: color-mix(in srgb, var(--error) 14%, transparent);
+}
+
+/* Shared by Attendance and Leave's filter rows */
+.filter-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.filter-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.filter-row input,
+.filter-row select {
+  font: inherit;
+  font-size: 13.5px;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
