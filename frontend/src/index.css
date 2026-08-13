@@ -1,44 +1,317 @@
+/* ==========================================================================
+   Employee MS — design tokens and global base styles
+
+   Every colour is declared once with light-dark(), which resolves against the
+   `color-scheme` set on <html> just below. That means the three theme states
+   (explicit light, explicit dark, follow-the-system) all fall out of a single
+   palette instead of three copies of it — ThemeContext only has to stamp
+   data-theme and the rest follows.
+   ========================================================================== */
+
 :root {
-  --text: #1f2430;
-  --text-muted: #5b6472;
-  --bg: #f4f5f7;
-  --surface: #ffffff;
-  --border: #d8dbe0;
-  --accent: #2f6f5e;
-  --accent-hover: #24564a;
-  --error: #b3261e;
   color-scheme: light dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #e7eaee;
-    --text-muted: #9aa4b2;
-    --bg: #14181d;
-    --surface: #1c2126;
-    --border: #2c333b;
-    --accent: #4fb6a0;
-    --accent-hover: #6fcab7;
-    --error: #e2726b;
-  }
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
-* {
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+:root {
+  /* --- Brand ------------------------------------------------------------ */
+  --accent: light-dark(#0f6b56, #34c99f);
+  --accent-hover: light-dark(#0a5443, #5fdcb7);
+  /* Text/icons drawn *on top of* an accent fill. Dark mode's accent is bright,
+     so white would fail contrast there — this flips to near-black instead. */
+  --accent-contrast: light-dark(#ffffff, #05241d);
+  --accent-soft: light-dark(#e7f2ee, #10302a);
+
+  /* --- Neutrals --------------------------------------------------------- */
+  --bg: light-dark(#f4f6f8, #0a0d11);
+  --surface: light-dark(#ffffff, #12171d);
+  --surface-2: light-dark(#f4f6f8, #171e25);
+  --surface-3: light-dark(#eaeef2, #1e262f);
+  --border: light-dark(#e4e8ed, #232b35);
+  --border-strong: light-dark(#d1d8e0, #303a46);
+  --text: light-dark(#0f1720, #e9eef3);
+  --text-muted: light-dark(#5a6673, #97a3b1);
+  --text-subtle: light-dark(#8b96a3, #707d8b);
+
+  /* --- Status ----------------------------------------------------------- */
+  --success: light-dark(#0f6f47, #40cb8c);
+  --success-soft: light-dark(#e4f4ec, #0f2c22);
+  --warning: light-dark(#8a5a08, #e3ac48);
+  --warning-soft: light-dark(#fbf1de, #322611);
+  --danger: light-dark(#b3261e, #f0827a);
+  --danger-soft: light-dark(#fdecea, #341a1a);
+  --info: light-dark(#1a5fb4, #7cb0f2);
+  --info-soft: light-dark(#e9f1fd, #142339);
+  /* Pre-refresh name, still referenced by a few rules. */
+  --error: var(--danger);
+
+  /* --- Elevation -------------------------------------------------------- */
+  --shadow-xs: 0 1px 2px light-dark(rgba(16, 24, 32, 0.05), rgba(0, 0, 0, 0.45));
+  --shadow-sm:
+    0 1px 2px light-dark(rgba(16, 24, 32, 0.05), rgba(0, 0, 0, 0.4)),
+    0 2px 4px -2px light-dark(rgba(16, 24, 32, 0.05), rgba(0, 0, 0, 0.35));
+  --shadow-md:
+    0 1px 2px light-dark(rgba(16, 24, 32, 0.04), rgba(0, 0, 0, 0.4)),
+    0 10px 24px -12px light-dark(rgba(16, 24, 32, 0.2), rgba(0, 0, 0, 0.7));
+  --shadow-lg:
+    0 2px 4px light-dark(rgba(16, 24, 32, 0.05), rgba(0, 0, 0, 0.45)),
+    0 26px 50px -18px light-dark(rgba(16, 24, 32, 0.24), rgba(0, 0, 0, 0.78));
+  --shadow-accent: 0 8px 20px -10px color-mix(in srgb, var(--accent) 70%, transparent);
+
+  /* --- Shape ------------------------------------------------------------ */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 11px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* --- Motion ----------------------------------------------------------- */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 0.14s;
+  --dur: 0.22s;
+
+  /* --- Layout metrics --------------------------------------------------- */
+  --sidebar-width: 254px;
+  --topbar-height: 60px;
+  --content-max: 1180px;
+
+  /* --- Icons ------------------------------------------------------------
+     Drawn as masks rather than <img>, so they inherit the colour of whatever
+     they sit inside (an alert's text colour changes per theme). */
+  --icon-alert: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7.5v5.5M12 16.2v.3'/%3E%3C/svg%3E");
+
+  /* --- Type ------------------------------------------------------------- */
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
   min-height: 100svh;
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
   color: var(--text);
-  background: var(--bg);
+  /* Two very wide, very faint brand washes keep large empty areas (the login
+     screen, a short table) from reading as flat grey. */
+  background:
+    radial-gradient(1100px 620px at 12% -12%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 62%),
+    radial-gradient(900px 520px at 100% 0%, color-mix(in srgb, var(--info) 6%, transparent), transparent 58%),
+    var(--bg);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis-weight: none;
 }
 
 #root {
   min-height: 100svh;
 }
 
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+/* Zero specificity via :where() so any component class — a link styled as a
+   button, a card wrapped in an <a> — overrides these without a fight. */
+:where(a) {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+:where(a:hover) {
+  color: var(--accent-hover);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+/* Numbers in data views line up column-to-column. */
+table,
+time,
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Form controls — styled globally so every screen inherits one control look
+   without each page re-declaring padding, borders and focus rings.
+   ========================================================================== */
+
+input:where(:not([type="checkbox"], [type="radio"])),
+select,
+textarea {
+  font: inherit;
+  font-size: 14px;
+  padding: 9px 12px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-xs);
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 76px;
+}
+
+select {
+  /* Native arrow replaced with one that matches the icon set. The chevron is a
+     mid grey chosen to read against both the light and dark field fills, since
+     a data: URI can't reference a custom property. */
+  appearance: none;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b96a3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 15px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-subtle);
+}
+
+input:where(:not([type="checkbox"], [type="radio"])):hover:not(:disabled),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border-strong));
+}
+
+input:where(:not([type="checkbox"], [type="radio"])):focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+input[aria-invalid="true"]:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 20%, transparent);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--surface-2);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
 button {
   font-family: inherit;
+}
+
+/* Zero-specificity so component rules can still opt out. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Scrollbars
+   ========================================================================== */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border: 3px solid transparent;
+  border-radius: var(--radius-pill);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-subtle);
+  background-clip: content-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Decorative animation is dropped, but looping progress indicators keep
+     turning — they're the only signal that a request is still in flight. */
+  :where(:not(.spinner, .login-spinner)),
+  :where(:not(.spinner, .login-spinner))::before,
+  :where(:not(.spinner, .login-spinner))::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .spinner,
+  .login-spinner {
+    animation-duration: 1.6s !important;
+  }
 }

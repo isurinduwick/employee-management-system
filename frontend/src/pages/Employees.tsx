@@ -3,6 +3,7 @@ import { extractErrorMessage } from "../api/client";
 import { getDepartments } from "../api/departments";
 import { createEmployee, deactivateEmployee, getEmployees, updateEmployee } from "../api/employees";
 import { useAuth } from "../auth/AuthContext";
+import { EmptyState } from "../components/EmptyState";
 import { Spinner } from "../components/Spinner";
 import { useToast } from "../components/Toast";
 import type { Role } from "../types/auth";
@@ -176,7 +177,10 @@ export function Employees() {
   return (
     <div className="data-page employees-page">
       <div className="page-header">
-        <h1>Employees</h1>
+        <div>
+          <h1>Employees</h1>
+          <p className="page-subtitle">Everyone on the payroll, their department, role and reporting line.</p>
+        </div>
         {canManage && !showForm && (
           <button type="button" className="primary-button" onClick={openCreateForm}>
             New Employee
@@ -189,7 +193,14 @@ export function Employees() {
 
       {canManage && showForm && (
         <form className="employee-form" onSubmit={handleSubmit}>
-          <h2>{editingId === null ? "New Employee" : "Edit Employee"}</h2>
+          <div className="employee-form-header">
+            <h2 className="panel-title">{editingId === null ? "New Employee" : "Edit Employee"}</h2>
+            <p className="panel-hint">
+              {editingId === null
+                ? "Create a login and assign the new hire to a department."
+                : "Update this employee's details, role or reporting line."}
+            </p>
+          </div>
 
           <div className="form-grid">
             <label>
@@ -323,56 +334,69 @@ export function Employees() {
 
       {employees === null && !loadError && <Spinner />}
 
+      {employees && employees.length === 0 && (
+        <EmptyState
+          title="No employees yet"
+          hint={canManage ? "Add your first employee to get the directory started." : undefined}
+        />
+      )}
+
       {employees && employees.length > 0 && (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Name</th>
-              <th>Department</th>
-              <th>Role</th>
-              <th>Manager</th>
-              <th>Status</th>
-              {canManage && <th aria-label="Actions" />}
-            </tr>
-          </thead>
-          <tbody>
-            {employees.map((employee) => (
-              <tr key={employee.id}>
-                <td>{employee.employeeCode}</td>
-                <td>
-                  {employee.firstName} {employee.lastName}
-                  <div className="employee-email">{employee.email}</div>
-                </td>
-                <td>{employee.departmentName}</td>
-                <td>{employee.role}</td>
-                <td>{employee.managerName ?? "—"}</td>
-                <td>
-                  <span className={"status-pill" + (employee.isActive ? " active" : " inactive")}>
-                    {employee.isActive ? "Active" : "Inactive"}
-                  </span>
-                </td>
-                {canManage && (
-                  <td className="actions-cell">
-                    <button type="button" className="link-button" onClick={() => openEditForm(employee)}>
-                      Edit
-                    </button>
-                    {employee.isActive && (
-                      <button
-                        type="button"
-                        className="link-button danger"
-                        onClick={() => handleDeactivate(employee)}
-                        disabled={deactivatingId === employee.id}
-                      >
-                        {deactivatingId === employee.id ? "Deactivating…" : "Deactivate"}
-                      </button>
+        <div className="table-card">
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Name</th>
+                  <th>Department</th>
+                  <th>Role</th>
+                  <th>Manager</th>
+                  <th>Status</th>
+                  {canManage && <th aria-label="Actions" />}
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map((employee) => (
+                  <tr key={employee.id}>
+                    <td>{employee.employeeCode}</td>
+                    <td>
+                      <span className="employee-name">
+                        {employee.firstName} {employee.lastName}
+                      </span>
+                      <div className="employee-email">{employee.email}</div>
+                    </td>
+                    <td>{employee.departmentName}</td>
+                    <td>{employee.role}</td>
+                    <td>{employee.managerName ?? "—"}</td>
+                    <td>
+                      <span className={"status-pill" + (employee.isActive ? " active" : " inactive")}>
+                        {employee.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    {canManage && (
+                      <td className="actions-cell">
+                        <button type="button" className="link-button" onClick={() => openEditForm(employee)}>
+                          Edit
+                        </button>
+                        {employee.isActive && (
+                          <button
+                            type="button"
+                            className="link-button danger"
+                            onClick={() => handleDeactivate(employee)}
+                            disabled={deactivatingId === employee.id}
+                          >
+                            {deactivatingId === employee.id ? "Deactivating…" : "Deactivate"}
+                          </button>
+                        )}
+                      </td>
                     )}
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );

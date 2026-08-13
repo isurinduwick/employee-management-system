@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { extractErrorMessage } from "../api/client";
 import { createDepartment, deleteDepartment, getDepartments, updateDepartment } from "../api/departments";
 import { useAuth } from "../auth/AuthContext";
+import { EmptyState } from "../components/EmptyState";
 import { Spinner } from "../components/Spinner";
 import { useToast } from "../components/Toast";
 import type { Department } from "../types/department";
@@ -116,7 +117,10 @@ export function Departments() {
   return (
     <div className="data-page">
       <div className="page-header">
-        <h1>Departments</h1>
+        <div>
+          <h1>Departments</h1>
+          <p className="page-subtitle">The teams your people are organised into.</p>
+        </div>
         {canManage && !isCreating && (
           <button type="button" className="primary-button" onClick={() => setIsCreating(true)}>
             New Department
@@ -157,76 +161,85 @@ export function Departments() {
 
       {departments === null && !loadError && <Spinner />}
 
-      {departments && departments.length === 0 && <p>No departments yet.</p>}
+      {departments && departments.length === 0 && (
+        <EmptyState
+          title="No departments yet"
+          hint={canManage ? "Create your first department to start grouping employees." : undefined}
+        />
+      )}
 
       {departments && departments.length > 0 && (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Employees</th>
-              {canManage && <th aria-label="Actions" />}
-            </tr>
-          </thead>
-          <tbody>
-            {departments.map((department) => (
-              <tr key={department.id}>
-                {editingId === department.id ? (
-                  <td colSpan={canManage ? 1 : 2}>
-                    <div className="edit-row">
-                      <input
-                        type="text"
-                        value={editName}
-                        onChange={(event) => setEditName(event.target.value)}
-                        maxLength={100}
-                        autoFocus
-                      />
-                    </div>
-                    {editError && <p className="field-error">{editError}</p>}
-                  </td>
-                ) : (
-                  <td>{department.name}</td>
-                )}
-
-                {editingId !== department.id && <td>{department.employeeCount}</td>}
-
-                {canManage && (
-                  <td className="actions-cell">
+        <div className="table-card">
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Employees</th>
+                  {canManage && <th aria-label="Actions" />}
+                </tr>
+              </thead>
+              <tbody>
+                {departments.map((department) => (
+                  <tr key={department.id}>
                     {editingId === department.id ? (
-                      <>
-                        <button
-                          type="button"
-                          className="link-button"
-                          onClick={() => handleEditSave(department.id)}
-                          disabled={editSubmitting}
-                        >
-                          {editSubmitting ? "Saving…" : "Save"}
-                        </button>
-                        <button type="button" className="link-button" onClick={cancelEdit}>
-                          Cancel
-                        </button>
-                      </>
+                      <td colSpan={canManage ? 1 : 2}>
+                        <div className="edit-row">
+                          <input
+                            type="text"
+                            value={editName}
+                            onChange={(event) => setEditName(event.target.value)}
+                            maxLength={100}
+                            autoFocus
+                          />
+                        </div>
+                        {editError && <p className="field-error">{editError}</p>}
+                      </td>
                     ) : (
-                      <>
-                        <button type="button" className="link-button" onClick={() => startEdit(department)}>
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="link-button danger"
-                          onClick={() => handleDelete(department)}
-                          disabled={deletingId === department.id}
-                        >
-                          {deletingId === department.id ? "Deleting…" : "Delete"}
-                        </button>
-                      </>
+                      <td>{department.name}</td>
                     )}
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+                    {editingId !== department.id && <td>{department.employeeCount}</td>}
+
+                    {canManage && (
+                      <td className="actions-cell">
+                        {editingId === department.id ? (
+                          <>
+                            <button
+                              type="button"
+                              className="link-button"
+                              onClick={() => handleEditSave(department.id)}
+                              disabled={editSubmitting}
+                            >
+                              {editSubmitting ? "Saving…" : "Save"}
+                            </button>
+                            <button type="button" className="link-button" onClick={cancelEdit}>
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button type="button" className="link-button" onClick={() => startEdit(department)}>
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              className="link-button danger"
+                              onClick={() => handleDelete(department)}
+                              disabled={deletingId === department.id}
+                            >
+                              {deletingId === department.id ? "Deleting…" : "Delete"}
+                            </button>
+                          </>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );
