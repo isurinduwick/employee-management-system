@@ -3,7 +3,6 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../../core/error/failure.dart';
-import '../../../auth/domain/entities/role.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../data/datasources/leave_remote_data_source.dart';
 import '../../data/repositories/leave_repository_impl.dart';
@@ -37,13 +36,6 @@ final createLeaveRequestUseCaseProvider = Provider<CreateLeaveRequest>(
 final decideLeaveRequestUseCaseProvider = Provider<DecideLeaveRequest>(
   (ref) => DecideLeaveRequest(ref.watch(leaveRepositoryProvider)),
 );
-
-/// Deciding is Manager/Admin at the API; hiding the approvals screen and its
-/// buttons for an Employee keeps the UI from offering a guaranteed 403.
-final canDecideLeaveProvider = Provider<bool>((ref) {
-  final role = ref.watch(sessionProvider)?.role;
-  return role == Role.admin || role == Role.manager;
-});
 
 /// The signed-in user's own requests.
 ///

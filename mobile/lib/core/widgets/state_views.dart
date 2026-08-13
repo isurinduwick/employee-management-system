@@ -172,22 +172,3 @@ class EmptyView extends StatelessWidget {
     );
   }
 }
-
-/// Stands in for a route whose feature has not been built yet.
-class ComingSoonView extends StatelessWidget {
-  const ComingSoonView({
-    super.key,
-    required this.title,
-    required this.icon,
-    this.message = 'This screen is coming next.',
-  });
-
-  final String title;
-  final IconData icon;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return MessageView(icon: icon, title: title, message: message);
-  }
-}
