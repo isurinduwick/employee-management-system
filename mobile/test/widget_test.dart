@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/auth/domain/entities/role.dart';
+import 'package:mobile/features/departments/presentation/providers/department_providers.dart';
 
 import 'helpers/fake_auth_data_sources.dart';
+import 'helpers/fake_employee_data_sources.dart';
 import 'helpers/pump_app.dart';
 
 void main() {
@@ -90,13 +92,23 @@ void main() {
   });
 
   testWidgets('Tapping a nav item switches the visible page', (tester) async {
-    await pumpShellWithDrawerOpen(tester, Role.admin);
+    // The real Departments screen fetches on mount, so its data source needs
+    // faking now too — unlike its placeholder predecessor.
+    await pumpShellWithDrawerOpen(
+      tester,
+      Role.admin,
+      overrides: [
+        departmentRemoteDataSourceProvider.overrideWithValue(
+          FakeDepartmentRemoteDataSource(),
+        ),
+      ],
+    );
 
     await tester.tap(find.text('Departments'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Departments'), findsWidgets);
-    expect(find.text('This screen is coming next.'), findsOneWidget);
+    // The FAB is Admin-only and specific to the real Departments screen.
+    expect(find.text('New department'), findsOneWidget);
   });
 
   testWidgets('Logging out returns to the login screen', (tester) async {
