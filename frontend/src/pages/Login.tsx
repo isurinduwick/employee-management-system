@@ -5,6 +5,11 @@ import "./Login.css";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const EMAIL_MIN_LENGTH = 4;
+const EMAIL_MAX_LENGTH = 40;
+const PASSWORD_MIN_LENGTH = 6;
+const PASSWORD_MAX_LENGTH = 12;
+
 interface FieldErrors {
   email?: string;
   password?: string;
@@ -12,15 +17,20 @@ interface FieldErrors {
 
 function validate(email: string, password: string): FieldErrors {
   const errors: FieldErrors = {};
+  const trimmedEmail = email.trim();
 
-  if (!email.trim()) {
+  if (!trimmedEmail) {
     errors.email = "Email is required.";
-  } else if (!EMAIL_PATTERN.test(email.trim())) {
+  } else if (trimmedEmail.length < EMAIL_MIN_LENGTH || trimmedEmail.length > EMAIL_MAX_LENGTH) {
+    errors.email = `Email must be ${EMAIL_MIN_LENGTH}-${EMAIL_MAX_LENGTH} characters.`;
+  } else if (!EMAIL_PATTERN.test(trimmedEmail)) {
     errors.email = "Enter a valid email address.";
   }
 
   if (!password) {
     errors.password = "Password is required.";
+  } else if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
+    errors.password = `Password must be ${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH} characters.`;
   }
 
   return errors;
@@ -83,6 +93,8 @@ export function Login() {
             onBlur={() => setTouched((t) => ({ ...t, email: true }))}
             autoComplete="username"
             autoFocus
+            minLength={EMAIL_MIN_LENGTH}
+            maxLength={EMAIL_MAX_LENGTH}
             aria-invalid={touched.email && Boolean(fieldErrors.email)}
             aria-describedby={fieldErrors.email ? "email-error" : undefined}
           />
@@ -103,6 +115,8 @@ export function Login() {
               onChange={(event) => setPassword(event.target.value)}
               onBlur={() => setTouched((t) => ({ ...t, password: true }))}
               autoComplete="current-password"
+              minLength={PASSWORD_MIN_LENGTH}
+              maxLength={PASSWORD_MAX_LENGTH}
               aria-invalid={touched.password && Boolean(fieldErrors.password)}
               aria-describedby={fieldErrors.password ? "password-error" : undefined}
             />
