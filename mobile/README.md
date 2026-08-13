@@ -37,13 +37,16 @@ lib/
       domain/{entities,repositories,usecases}/
       data/{models,datasources,repositories}/
       presentation/{providers,screens,widgets}/
+    employees/                 <- second worked example: full CRUD
+    departments/               read path only (feeds the employee form's picker)
     shell/                     app bar + role-filtered drawer around every route
-    dashboard/ employees/ departments/ attendance/ leave/
+    dashboard/ attendance/ leave/
                                presentation-only placeholders, ready to grow
                                the same three layers
 test/
-  helpers/                     fake data sources + pumpApp()
+  helpers/                     fake data sources + pumpApp() / pumpScreen()
   features/auth/               repository mapping + full login flow
+  features/employees/          failure mapping + directory, create, deactivate
 ```
 
 ### The dependency rule
@@ -74,6 +77,15 @@ LoginForm  ->  LoginFormController  ->  AuthController
 Nothing above `AuthRepositoryImpl` throws: data sources throw, the repository
 catches once via `mapExceptionToFailure()`, and everything higher up pattern
 matches on a `sealed Failure`.
+
+### Feature status
+
+| Feature | State |
+|---|---|
+| Auth | Login, session restore, logout, 401 sign-out |
+| Employees | List, detail, create, edit, deactivate (writes Admin-only) |
+| Departments | Read path only — the picker in the employee form |
+| Dashboard, Attendance, Leave | Placeholder screens |
 
 ### Adding a feature
 
