@@ -4,6 +4,8 @@ import { extractErrorMessage } from "../api/client";
 import { getDepartments } from "../api/departments";
 import { getEmployees } from "../api/employees";
 import { useAuth } from "../auth/AuthContext";
+import { Spinner } from "../components/Spinner";
+import { useToast } from "../components/Toast";
 import type { AttendanceLog } from "../types/attendance";
 import type { Department } from "../types/department";
 import type { Employee } from "../types/employee";
@@ -21,6 +23,7 @@ function formatTime(value: string | null): string {
 
 export function Attendance() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const canFilterTeam = user?.role === "Admin" || user?.role === "Manager";
 
   const [todayRecord, setTodayRecord] = useState<AttendanceLog | null>(null);
@@ -86,6 +89,7 @@ export function Attendance() {
     try {
       const record = await checkIn("Web");
       setTodayRecord(record);
+      showToast("Checked in.");
     } catch (err) {
       setActionError(extractErrorMessage(err, "Failed to check in."));
     } finally {
@@ -99,6 +103,7 @@ export function Attendance() {
     try {
       const record = await checkOut();
       setTodayRecord(record);
+      showToast("Checked out.");
     } catch (err) {
       setActionError(extractErrorMessage(err, "Failed to check out."));
     } finally {
@@ -129,7 +134,7 @@ export function Attendance() {
 
       <div className="attendance-status-card">
         {statusLoading ? (
-          <p>Loading today's status…</p>
+          <Spinner label="Loading today's status…" />
         ) : todayRecord ? (
           <p>
             Checked in at <strong>{formatTime(todayRecord.checkInTime)}</strong>
@@ -204,7 +209,7 @@ export function Attendance() {
 
       {historyError && <p className="page-alert">{historyError}</p>}
 
-      {history === null && !historyError && <p>Loading history…</p>}
+      {history === null && !historyError && <Spinner label="Loading history…" />}
       {history && history.length === 0 && <p>No attendance records found.</p>}
 
       {history && history.length > 0 && (

@@ -2,11 +2,14 @@ import { useEffect, useState, type FormEvent } from "react";
 import { extractErrorMessage } from "../api/client";
 import { createDepartment, deleteDepartment, getDepartments, updateDepartment } from "../api/departments";
 import { useAuth } from "../auth/AuthContext";
+import { Spinner } from "../components/Spinner";
+import { useToast } from "../components/Toast";
 import type { Department } from "../types/department";
 import "../styles/data-page.css";
 
 export function Departments() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const canManage = user?.role === "Admin"; // reads are open to everyone; writes are Admin-only, same as the API
 
   const [departments, setDepartments] = useState<Department[] | null>(null);
@@ -53,6 +56,7 @@ export function Departments() {
       setDepartments((prev) => [...(prev ?? []), created]);
       setNewName("");
       setIsCreating(false);
+      showToast(`Department "${created.name}" created.`);
     } catch (err) {
       setCreateError(extractErrorMessage(err, "Failed to create department."));
     } finally {
@@ -83,6 +87,7 @@ export function Departments() {
       const updated = await updateDepartment(id, { name: editName.trim() });
       setDepartments((prev) => prev?.map((d) => (d.id === id ? updated : d)) ?? null);
       setEditingId(null);
+      showToast(`Department "${updated.name}" updated.`);
     } catch (err) {
       setEditError(extractErrorMessage(err, "Failed to update department."));
     } finally {
@@ -100,6 +105,7 @@ export function Departments() {
     try {
       await deleteDepartment(department.id);
       setDepartments((prev) => prev?.filter((d) => d.id !== department.id) ?? null);
+      showToast(`Department "${department.name}" deleted.`);
     } catch (err) {
       setDeleteError(extractErrorMessage(err, "Failed to delete department."));
     } finally {
@@ -149,7 +155,7 @@ export function Departments() {
         </form>
       )}
 
-      {departments === null && !loadError && <p>Loading…</p>}
+      {departments === null && !loadError && <Spinner />}
 
       {departments && departments.length === 0 && <p>No departments yet.</p>}
 
