@@ -5,13 +5,39 @@ import 'package:mobile/app/app.dart';
 import 'package:mobile/core/theme/app_theme.dart';
 import 'package:mobile/features/auth/data/models/session_model.dart';
 import 'package:mobile/features/auth/domain/entities/role.dart';
+import 'package:mobile/features/attendance/presentation/providers/attendance_providers.dart';
 import 'package:mobile/features/auth/presentation/providers/auth_providers.dart';
+import 'package:mobile/features/departments/presentation/providers/department_providers.dart';
+import 'package:mobile/features/employees/presentation/providers/employees_providers.dart';
+import 'package:mobile/features/leave/presentation/providers/leave_providers.dart';
 
+import 'fake_attendance_data_sources.dart';
 import 'fake_auth_data_sources.dart';
+import 'fake_employee_data_sources.dart';
+import 'fake_leave_data_sources.dart';
 
-/// Boots the real app — router, providers and all — with the auth data
-/// sources faked out. Pass [overrides] to fake another feature's data sources
-/// too.
+/// Empty stand-ins for every feature's data sources.
+///
+/// The dashboard is the landing route and reads several features at once, so
+/// booting the app touches all of them. Any source left un-faked would reach
+/// the network and hang the test, so they all get a default here and a test
+/// overrides only the one it cares about.
+List<Override> get _defaultFeatureOverrides => [
+  employeeRemoteDataSourceProvider.overrideWithValue(
+    FakeEmployeeRemoteDataSource(),
+  ),
+  departmentRemoteDataSourceProvider.overrideWithValue(
+    FakeDepartmentRemoteDataSource(),
+  ),
+  leaveRemoteDataSourceProvider.overrideWithValue(FakeLeaveRemoteDataSource()),
+  attendanceRemoteDataSourceProvider.overrideWithValue(
+    FakeAttendanceRemoteDataSource(),
+  ),
+];
+
+/// Boots the real app — router, providers and all — with the data sources
+/// faked out. Pass [overrides] to replace a specific feature's fake; those
+/// win over the defaults.
 Future<FakeAuthLocalDataSource> pumpApp(
   WidgetTester tester, {
   SessionModel? session,
@@ -29,6 +55,8 @@ Future<FakeAuthLocalDataSource> pumpApp(
         authRemoteDataSourceProvider.overrideWithValue(
           remote ?? FakeAuthRemoteDataSource(),
         ),
+        ..._defaultFeatureOverrides,
+        // Last override wins, so a caller's fake replaces the default above.
         ...overrides,
       ],
       child: const EmsApp(),
@@ -72,6 +100,7 @@ Future<void> pumpScreen(
         authRemoteDataSourceProvider.overrideWithValue(
           FakeAuthRemoteDataSource(),
         ),
+        ..._defaultFeatureOverrides,
         ...overrides,
       ],
       child: MaterialApp(theme: AppTheme.light(), home: screen),
@@ -91,6 +120,10 @@ Future<void> pumpAppAt(
 }) async {
   await pumpShellWithDrawerOpen(tester, role, overrides: overrides);
 
-  await tester.tap(find.text(navLabel));
+  // Scoped to the drawer: the dashboard underneath has quick actions with the
+  // same labels, so a bare text finder would match twice.
+  await tester.tap(
+    find.descendant(of: find.byType(Drawer), matching: find.text(navLabel)),
+  );
   await tester.pumpAndSettle();
 }

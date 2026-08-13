@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/auth/domain/entities/role.dart';
 
@@ -92,7 +93,14 @@ void main() {
   testWidgets('Tapping a nav item switches the visible page', (tester) async {
     await pumpShellWithDrawerOpen(tester, Role.admin);
 
-    await tester.tap(find.text('Departments'));
+    // Scoped to the drawer: the dashboard underneath has a "Departments" stat
+    // card with the same label, so a bare text finder would match twice.
+    await tester.tap(
+      find.descendant(
+        of: find.byType(Drawer),
+        matching: find.text('Departments'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Departments'), findsWidgets);
