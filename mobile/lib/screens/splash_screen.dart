@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../layout/app_shell.dart';
 import '../state/auth_state.dart';
 import '../theme/app_colors.dart';
-import 'home_screen.dart';
 import 'login_screen.dart';
 
 // Shown while AuthState restores the persisted session from secure storage,
@@ -22,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (_navigated || auth.isLoading) return;
     _navigated = true;
 
-    final target = auth.isAuthenticated ? const HomeScreen() : const LoginScreen();
+    final target = auth.isAuthenticated ? const AppShell() : const LoginScreen();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => target));

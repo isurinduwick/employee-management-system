@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/api_client.dart';
+import '../layout/app_shell.dart';
 import '../state/auth_state.dart';
 import '../theme/app_colors.dart';
-import 'home_screen.dart';
 
 const _emailPattern = r'^[^\s@]+@[^\s@]+\.[^\s@]+$';
 const _emailMinLength = 4;
@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await context.read<AuthState>().login(_emailController.text.trim(), _passwordController.text);
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const AppShell()),
         (route) => false,
       );
     } on ApiException catch (e) {
