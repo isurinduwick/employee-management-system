@@ -5,7 +5,7 @@ import '../../../../core/usecase/usecase.dart';
 import '../entities/department.dart';
 import '../repositories/department_repository.dart';
 
-/// Every department, for pickers and (later) the Departments screen.
+/// Every department, for pickers and the Departments screen.
 class GetDepartments implements UseCase<List<Department>, NoParams> {
   const GetDepartments(this._repository);
 
