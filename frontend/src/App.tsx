@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { Layout } from "./layout/Layout";
 import { Dashboard } from "./pages/Dashboard";
+import { Attendance } from "./pages/Attendance";
 import { Departments } from "./pages/Departments";
 import { Employees } from "./pages/Employees";
 import { Login } from "./pages/Login";
@@ -16,6 +17,8 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/departments" element={<Departments />} />
           <Route path="/employees" element={<Employees />} />
+          <Route path="/attendance" element={<Attendance />} />
+          <Route path="/attendance/team" element={<Attendance />} />
         </Route>
       </Route>
 
