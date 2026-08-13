@@ -15,6 +15,7 @@ class AppTextField extends StatelessWidget {
     this.textInputAction,
     this.autofillHints,
     this.maxLength,
+    this.maxLines = 1,
     this.enabled = true,
     this.obscureText = false,
     this.prefixIcon,
@@ -30,6 +31,10 @@ class AppTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
   final int? maxLength;
+
+  /// Above 1 the field grows into a text area — used for free-text notes such
+  /// as a leave request's reason.
+  final int maxLines;
   final bool enabled;
   final bool obscureText;
   final IconData? prefixIcon;
@@ -45,6 +50,7 @@ class AppTextField extends StatelessWidget {
       textInputAction: textInputAction,
       autofillHints: autofillHints,
       maxLength: maxLength,
+      maxLines: maxLines,
       enabled: enabled,
       obscureText: obscureText,
       validator: validator,
