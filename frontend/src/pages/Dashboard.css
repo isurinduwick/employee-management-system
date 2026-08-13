@@ -1,0 +1,32 @@
+.dashboard-page {
+  max-width: 900px;
+}
+
+.today-banner {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.today-banner a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.today-checked-in {
+  color: #2e7d46;
+  background: color-mix(in srgb, #2e7d46 10%, var(--surface));
+  border-color: color-mix(in srgb, #2e7d46 30%, transparent);
+}
+
+.today-checked-out {
+  color: var(--text-muted);
+}
+
+.today-not-checked-in {
+  color: #97671b;
+  background: color-mix(in srgb, #97671b 10%, var(--surface));
+  border-color: color-mix(in srgb, #97671b 30%, transparent);
+}

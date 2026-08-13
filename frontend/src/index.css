@@ -3,24 +3,43 @@
   --text-muted: #5b6472;
   --bg: #f4f5f7;
   --surface: #ffffff;
+  --surface-2: #eceef1;
   --border: #d8dbe0;
   --accent: #2f6f5e;
   --accent-hover: #24564a;
   --error: #b3261e;
+  --shadow: 0 1px 2px rgba(16, 24, 32, 0.04), 0 8px 24px -8px rgba(16, 24, 32, 0.12);
   color-scheme: light dark;
 }
 
+/* System preference applies only when the user hasn't explicitly chosen light. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --text: #e7eaee;
     --text-muted: #9aa4b2;
     --bg: #14181d;
     --surface: #1c2126;
+    --surface-2: #232a30;
     --border: #2c333b;
     --accent: #4fb6a0;
     --accent-hover: #6fcab7;
     --error: #e2726b;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -8px rgba(0, 0, 0, 0.5);
   }
+}
+
+/* Explicit user choice always wins, in both directions. */
+:root[data-theme="dark"] {
+  --text: #e7eaee;
+  --text-muted: #9aa4b2;
+  --bg: #14181d;
+  --surface: #1c2126;
+  --surface-2: #232a30;
+  --border: #2c333b;
+  --accent: #4fb6a0;
+  --accent-hover: #6fcab7;
+  --error: #e2726b;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -8px rgba(0, 0, 0, 0.5);
 }
 
 * {

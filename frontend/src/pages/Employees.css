@@ -10,6 +10,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
+  box-shadow: var(--shadow);
 }
 
 .employee-form h2 {
