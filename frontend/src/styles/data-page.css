@@ -1,0 +1,162 @@
+/* Shared by every CRUD-table screen (Departments, Employees, Attendance,
+   Leave) so each one doesn't redefine the same table/form/button styling. */
+
+.data-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 860px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.page-alert {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  color: var(--error);
+  background: color-mix(in srgb, var(--error) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--error) 30%, transparent);
+  border-radius: 8px;
+}
+
+.field-error {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--error);
+}
+
+.primary-button,
+.secondary-button {
+  padding: 8px 16px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  color: #fff;
+}
+
+.primary-button:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.primary-button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.secondary-button {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+}
+
+.secondary-button:hover {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+
+.create-row,
+.edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.create-row {
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.create-row input,
+.edit-row input {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.create-row input:focus-visible,
+.edit-row input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.data-table th,
+.data-table td {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--text) 3%, var(--surface));
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.link-button:hover:not(:disabled) {
+  color: var(--accent-hover);
+}
+
+.link-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.link-button.danger {
+  color: var(--error);
+}
