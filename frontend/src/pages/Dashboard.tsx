@@ -1,15 +1,15 @@
 import { useAuth } from "../auth/AuthContext";
 
 // Placeholder landing page — real role-specific content (Admin/Manager/Employee
-// panels) lands on the frontend/layout and later feature branches.
+// panels) lands on later feature branches. Logout lives in the Layout's top
+// bar now, not duplicated here.
 export function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   return (
-    <main>
+    <div>
       <h1>Welcome, {user?.fullName}</h1>
       <p>Role: {user?.role}</p>
-      <button onClick={logout}>Log out</button>
-    </main>
+    </div>
   );
 }
