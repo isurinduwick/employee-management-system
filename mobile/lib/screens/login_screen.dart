@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/api_client.dart';
+import '../layout/app_shell.dart';
 import '../state/auth_state.dart';
 import '../theme/app_colors.dart';
-import 'home_screen.dart';
 
 const _emailPattern = r'^[^\s@]+@[^\s@]+\.[^\s@]+$';
 const _emailMinLength = 4;
@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await context.read<AuthState>().login(_emailController.text.trim(), _passwordController.text);
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const AppShell()),
         (route) => false,
       );
     } on ApiException catch (e) {
@@ -113,25 +113,30 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [AppColors.accent, Color(0xFF0B3F5F)],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.accent.withValues(alpha: 0.35),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
+                    // Align keeps the mark a 40x40 tile — the Column stretches
+                    // its children to full width otherwise.
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [AppColors.accent, Color(0xFF0B3F5F)],
                           ),
-                        ],
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.accent.withValues(alpha: 0.35),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.business_center_rounded, size: 20, color: AppColors.accentContrast),
                       ),
-                      child: const Icon(Icons.business_center_rounded, size: 20, color: AppColors.accentContrast),
                     ),
                     const SizedBox(height: 16),
                     Text(
