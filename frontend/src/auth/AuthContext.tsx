@@ -21,8 +21,15 @@ function readStoredUser(): AuthUser | null {
   const raw = localStorage.getItem(AUTH_STORAGE_KEY);
   if (!raw) return null;
 
-  const stored = JSON.parse(raw) as LoginResponse;
-  return { employeeId: stored.employeeId, fullName: stored.fullName, role: stored.role };
+  try {
+    const stored = JSON.parse(raw) as LoginResponse;
+    return { employeeId: stored.employeeId, fullName: stored.fullName, role: stored.role };
+  } catch {
+    // Malformed/stale data from an earlier session — don't let it crash the
+    // whole app on load, just treat it as "not logged in."
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    return null;
+  }
 }
 
 // Reading from localStorage on mount is what keeps a user logged in across a

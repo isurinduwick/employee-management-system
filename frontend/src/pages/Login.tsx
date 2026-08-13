@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
@@ -65,8 +66,17 @@ export function Login() {
     try {
       await login(email.trim(), password);
       navigate("/", { replace: true });
-    } catch {
-      setFormError("Invalid email or password.");
+    } catch (err) {
+      // A 401 means the API itself rejected the credentials — anything else
+      // (network failure, CORS block, 500) is a different problem and
+      // shouldn't be mislabeled as a wrong password.
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        setFormError("Invalid email or password.");
+      } else if (axios.isAxiosError(err) && !err.response) {
+        setFormError("Couldn't reach the server. Is the API running?");
+      } else {
+        setFormError("Something went wrong. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
