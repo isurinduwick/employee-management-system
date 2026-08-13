@@ -13,8 +13,14 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
   const stored = localStorage.getItem(AUTH_STORAGE_KEY);
   if (stored) {
-    const { token } = JSON.parse(stored) as { token: string };
-    config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const { token } = JSON.parse(stored) as { token: string };
+      config.headers.Authorization = `Bearer ${token}`;
+    } catch {
+      // Malformed/stale data — drop it rather than let a parse error abort
+      // every outgoing request (including login itself) before it's even sent.
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    }
   }
   return config;
 });
@@ -32,3 +38,18 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+// Controller actions like Conflict("...")/BadRequest("...") return the message
+// as a raw JSON string body; validation failures instead return a
+// ProblemDetails object with a `title`. This normalizes both into one string
+// so every page can show a real backend message instead of a generic one.
+export function extractErrorMessage(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err)) {
+    const data = err.response?.data;
+    if (typeof data === "string") return data;
+    if (data && typeof data === "object" && "title" in data) {
+      return String((data as { title: unknown }).title);
+    }
+  }
+  return fallback;
+}
