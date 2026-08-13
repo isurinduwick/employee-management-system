@@ -1,30 +1,35 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:mobile/api/token_storage.dart';
 import 'package:mobile/main.dart';
+import 'package:mobile/models/auth.dart';
+import 'package:mobile/state/auth_state.dart';
+
+// A real TokenStorage touches the platform keystore via a method channel,
+// which has no handler in the widget-test environment and hangs forever.
+// This fake keeps the same read/save/clear contract entirely in memory.
+class FakeTokenStorage implements TokenStorage {
+  LoginResponse? _stored;
+
+  @override
+  Future<LoginResponse?> read() async => _stored;
+
+  @override
+  Future<void> save(LoginResponse session) async => _stored = session;
+
+  @override
+  Future<void> clear() async => _stored = null;
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Unauthenticated session lands on the login screen', (WidgetTester tester) async {
+    final authState = AuthState(tokenStorage: FakeTokenStorage());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(EmsApp(authState: authState));
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'Sign in'), findsOneWidget);
   });
 }
