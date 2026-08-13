@@ -35,9 +35,19 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
-  http: ^1.2.2
+  # State management + dependency injection (AsyncNotifier / AsyncValue).
+  flutter_riverpod: ^2.6.1
+  # HTTP client for the data layer's remote data sources.
+  dio: ^5.11.0
+  # Declarative routing with an auth-aware redirect.
+  go_router: ^17.5.0
+  # Either<Failure, T> so the domain layer returns errors instead of throwing.
+  fpdart: ^1.2.0
+  # Annotations for the generated models (see dev_dependencies for the builders).
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.12.0
+
   flutter_secure_storage: ^9.2.2
-  provider: ^6.1.2
   google_fonts: ^6.2.1
 
 dev_dependencies:
@@ -50,6 +60,11 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+
+  # Codegen: `dart run build_runner build --delete-conflicting-outputs`
+  build_runner: ^2.7.1
+  freezed: ^3.2.0
+  json_serializable: ^6.9.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
