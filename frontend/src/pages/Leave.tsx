@@ -3,6 +3,8 @@ import { extractErrorMessage } from "../api/client";
 import { decideLeaveRequest, getLeaveRequests, submitLeaveRequest } from "../api/leave";
 import { getEmployees } from "../api/employees";
 import { useAuth } from "../auth/AuthContext";
+import { Spinner } from "../components/Spinner";
+import { useToast } from "../components/Toast";
 import type { LeaveRequest, LeaveStatus, LeaveType } from "../types/leave";
 import type { Employee } from "../types/employee";
 import "../styles/data-page.css";
@@ -13,6 +15,7 @@ const STATUS_FILTERS: LeaveStatus[] = ["Pending", "Approved", "Rejected"];
 
 export function Leave() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const canReview = user?.role === "Admin" || user?.role === "Manager";
 
   const [requests, setRequests] = useState<LeaveRequest[] | null>(null);
@@ -92,6 +95,7 @@ export function Leave() {
       setStartDate("");
       setEndDate("");
       setReason("");
+      showToast("Leave request submitted.");
     } catch (err) {
       setFormError(extractErrorMessage(err, "Failed to submit leave request."));
     } finally {
@@ -105,6 +109,7 @@ export function Leave() {
     try {
       const updated = await decideLeaveRequest(request.id, status);
       setRequests((prev) => prev?.map((r) => (r.id === request.id ? updated : r)) ?? null);
+      showToast(`Leave request ${status.toLowerCase()}.`);
     } catch (err) {
       setDecisionError(extractErrorMessage(err, "Failed to record decision."));
     } finally {
@@ -213,7 +218,7 @@ export function Leave() {
         </div>
       )}
 
-      {requests === null && !loadError && <p>Loading…</p>}
+      {requests === null && !loadError && <Spinner />}
       {requests && requests.length === 0 && <p>No leave requests found.</p>}
 
       {requests && requests.length > 0 && (
