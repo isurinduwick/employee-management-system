@@ -84,80 +84,110 @@ export function Login() {
 
   return (
     <main className="login-page">
-      <form className="login-card" onSubmit={handleSubmit} noValidate>
-        <div className="login-brand">
-          <span className="login-mark" aria-hidden="true">
-            EMS
-          </span>
-          <h1>Welcome back</h1>
-          <p className="login-subtitle">Sign in to the Employee Management System</p>
-        </div>
-
-        <div className="login-field">
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-            autoComplete="username"
-            autoFocus
-            minLength={EMAIL_MIN_LENGTH}
-            maxLength={EMAIL_MAX_LENGTH}
-            aria-invalid={touched.email && Boolean(fieldErrors.email)}
-            aria-describedby={fieldErrors.email ? "email-error" : undefined}
-          />
-          {touched.email && fieldErrors.email && (
-            <p className="field-error" id="email-error">
-              {fieldErrors.email}
-            </p>
-          )}
-        </div>
-
-        <div className="login-field">
-          <label htmlFor="password">Password</label>
-          <div className="password-input">
-            <input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-              autoComplete="current-password"
-              minLength={PASSWORD_MIN_LENGTH}
-              maxLength={PASSWORD_MAX_LENGTH}
-              aria-invalid={touched.password && Boolean(fieldErrors.password)}
-              aria-describedby={fieldErrors.password ? "password-error" : undefined}
-            />
-            <button
-              type="button"
-              className="password-toggle"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              tabIndex={-1}
-            >
-              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-            </button>
+      <div className="login-shell">
+        <section className="login-aside" aria-hidden="true">
+          <div className="login-aside-brand">
+            <span className="login-mark">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3.2 20 7v10l-8 3.8L4 17V7z" />
+                <path d="M12 11.2 20 7M12 11.2 4 7M12 11.2v9.6" />
+              </svg>
+            </span>
+            <span className="login-aside-name">Employee MS</span>
           </div>
-          {touched.password && fieldErrors.password && (
-            <p className="field-error" id="password-error">
-              {fieldErrors.password}
+
+          <div className="login-aside-body">
+            <h2>Everything your team runs on, in one place.</h2>
+            <ul className="login-points">
+              <li>People and departments, always current</li>
+              <li>Daily attendance with a full history</li>
+              <li>Leave requests and approvals end to end</li>
+            </ul>
+          </div>
+
+          <p className="login-aside-foot">Employee Management System</p>
+        </section>
+
+        <form className="login-card" onSubmit={handleSubmit} noValidate>
+          <div className="login-brand">
+            <span className="login-mark login-mark-compact" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3.2 20 7v10l-8 3.8L4 17V7z" />
+                <path d="M12 11.2 20 7M12 11.2 4 7M12 11.2v9.6" />
+              </svg>
+            </span>
+            <h1>Welcome back</h1>
+            <p className="login-subtitle">Sign in to continue to your workspace</p>
+          </div>
+
+          <div className="login-field">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              placeholder="you@company.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+              autoComplete="username"
+              autoFocus
+              minLength={EMAIL_MIN_LENGTH}
+              maxLength={EMAIL_MAX_LENGTH}
+              aria-invalid={touched.email && Boolean(fieldErrors.email)}
+              aria-describedby={fieldErrors.email ? "email-error" : undefined}
+            />
+            {touched.email && fieldErrors.email && (
+              <p className="field-error" id="email-error">
+                {fieldErrors.email}
+              </p>
+            )}
+          </div>
+
+          <div className="login-field">
+            <label htmlFor="password">Password</label>
+            <div className="password-input">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                autoComplete="current-password"
+                minLength={PASSWORD_MIN_LENGTH}
+                maxLength={PASSWORD_MAX_LENGTH}
+                aria-invalid={touched.password && Boolean(fieldErrors.password)}
+                aria-describedby={fieldErrors.password ? "password-error" : undefined}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
+            {touched.password && fieldErrors.password && (
+              <p className="field-error" id="password-error">
+                {fieldErrors.password}
+              </p>
+            )}
+          </div>
+
+          {formError && (
+            <p className="login-alert" role="alert">
+              {formError}
             </p>
           )}
-        </div>
 
-        {formError && (
-          <p className="login-alert" role="alert">
-            {formError}
-          </p>
-        )}
-
-        <button type="submit" className="login-submit" disabled={submitting}>
-          {submitting && <span className="login-spinner" aria-hidden="true" />}
-          {submitting ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
+          <button type="submit" className="login-submit" disabled={submitting}>
+            {submitting && <span className="login-spinner" aria-hidden="true" />}
+            {submitting ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
+      </div>
     </main>
   );
 }
