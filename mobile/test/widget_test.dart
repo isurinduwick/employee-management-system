@@ -1,70 +1,41 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile/features/auth/domain/entities/role.dart';
 
-import 'package:mobile/api/token_storage.dart';
-import 'package:mobile/main.dart';
-import 'package:mobile/models/auth.dart';
-import 'package:mobile/state/auth_state.dart';
-
-// A real TokenStorage touches the platform keystore via a method channel,
-// which has no handler in the widget-test environment and hangs forever.
-// This fake keeps the same read/save/clear contract entirely in memory.
-class FakeTokenStorage implements TokenStorage {
-  LoginResponse? _stored;
-
-  FakeTokenStorage([this._stored]);
-
-  @override
-  Future<LoginResponse?> read() async => _stored;
-
-  @override
-  Future<void> save(LoginResponse session) async => _stored = session;
-
-  @override
-  Future<void> clear() async => _stored = null;
-}
-
-LoginResponse sessionFor(Role role) => LoginResponse(
-      token: 'test-token',
-      expiresAt: DateTime.now().add(const Duration(hours: 1)),
-      employeeId: 1,
-      fullName: 'Alex Manager',
-      role: role,
-    );
-
-/// Boots the app already signed in as [role] and opens the nav drawer.
-Future<void> pumpShellWithDrawerOpen(WidgetTester tester, Role role) async {
-  final authState = AuthState(tokenStorage: FakeTokenStorage(sessionFor(role)));
-
-  await tester.pumpWidget(EmsApp(authState: authState));
-  await tester.pumpAndSettle();
-
-  await tester.tap(find.byTooltip('Open navigation menu'));
-  await tester.pumpAndSettle();
-}
+import 'helpers/fake_auth_data_sources.dart';
+import 'helpers/pump_app.dart';
 
 void main() {
-  testWidgets('Unauthenticated session lands on the login screen', (WidgetTester tester) async {
-    final authState = AuthState(tokenStorage: FakeTokenStorage());
-
-    await tester.pumpWidget(EmsApp(authState: authState));
-    await tester.pumpAndSettle();
+  testWidgets('Unauthenticated session lands on the login screen', (
+    tester,
+  ) async {
+    await pumpApp(tester);
 
     expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.widgetWithText(ElevatedButton, 'Sign in'), findsOneWidget);
+    expect(find.text('Sign in'), findsOneWidget);
   });
 
-  testWidgets('Restored session lands on the app shell', (WidgetTester tester) async {
-    final authState = AuthState(tokenStorage: FakeTokenStorage(sessionFor(Role.employee)));
-
-    await tester.pumpWidget(EmsApp(authState: authState));
-    await tester.pumpAndSettle();
+  testWidgets('Restored session lands on the app shell', (tester) async {
+    await pumpApp(tester, session: sessionModelFor(Role.employee));
 
     // Dashboard is the default route, shown in both the app bar and the body.
     expect(find.text('Dashboard'), findsWidgets);
   });
 
-  testWidgets('Admin sees every nav item', (WidgetTester tester) async {
+  testWidgets('An expired stored session falls back to login', (tester) async {
+    final local = await pumpApp(
+      tester,
+      session: sessionModelFor(
+        Role.admin,
+        validFor: const Duration(hours: -1),
+      ),
+    );
+
+    expect(find.text('Welcome back'), findsOneWidget);
+    // The dead session is cleared rather than left to earn a 401 later.
+    expect(local.stored, isNull);
+  });
+
+  testWidgets('Admin sees every nav item', (tester) async {
     await pumpShellWithDrawerOpen(tester, Role.admin);
 
     for (final label in [
@@ -80,20 +51,35 @@ void main() {
     }
   });
 
-  testWidgets('Employee only sees self-service nav items', (WidgetTester tester) async {
+  testWidgets('Employee only sees self-service nav items', (tester) async {
     await pumpShellWithDrawerOpen(tester, Role.employee);
 
     for (final label in ['Dashboard', 'Attendance', 'Leave']) {
-      expect(find.text(label), findsWidgets, reason: 'Employee should see $label');
+      expect(
+        find.text(label),
+        findsWidgets,
+        reason: 'Employee should see $label',
+      );
     }
 
     // Admin-only and manager-only routes must not leak into an employee's nav.
-    for (final label in ['Employees', 'Departments', 'Team Attendance', 'Leave Approvals']) {
-      expect(find.text(label), findsNothing, reason: 'Employee should not see $label');
+    for (final label in [
+      'Employees',
+      'Departments',
+      'Team Attendance',
+      'Leave Approvals',
+    ]) {
+      expect(
+        find.text(label),
+        findsNothing,
+        reason: 'Employee should not see $label',
+      );
     }
   });
 
-  testWidgets('Manager sees team views but not the admin-only ones', (WidgetTester tester) async {
+  testWidgets('Manager sees team views but not the admin-only ones', (
+    tester,
+  ) async {
     await pumpShellWithDrawerOpen(tester, Role.manager);
 
     expect(find.text('Team Attendance'), findsWidgets);
@@ -103,7 +89,7 @@ void main() {
     expect(find.text('Departments'), findsNothing);
   });
 
-  testWidgets('Tapping a nav item switches the visible page', (WidgetTester tester) async {
+  testWidgets('Tapping a nav item switches the visible page', (tester) async {
     await pumpShellWithDrawerOpen(tester, Role.admin);
 
     await tester.tap(find.text('Departments'));
@@ -111,5 +97,17 @@ void main() {
 
     expect(find.text('Departments'), findsWidgets);
     expect(find.text('This screen is coming next.'), findsOneWidget);
+  });
+
+  testWidgets('Logging out returns to the login screen', (tester) async {
+    final local = await pumpApp(tester, session: sessionModelFor(Role.admin));
+
+    await tester.tap(find.byTooltip('Open navigation menu'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Log out'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome back'), findsOneWidget);
+    expect(local.stored, isNull);
   });
 }
