@@ -1,6 +1,7 @@
 import 'package:mobile/features/auth/domain/entities/role.dart';
 import 'package:mobile/features/departments/data/datasources/department_remote_data_source.dart';
 import 'package:mobile/features/departments/data/models/department_model.dart';
+import 'package:mobile/features/departments/data/models/department_request_model.dart';
 import 'package:mobile/features/employees/data/datasources/employee_remote_data_source.dart';
 import 'package:mobile/features/employees/data/models/employee_model.dart';
 import 'package:mobile/features/employees/data/models/employee_request_models.dart';
@@ -89,19 +90,77 @@ class FakeEmployeeRemoteDataSource implements EmployeeRemoteDataSource {
   }
 }
 
+/// In-memory stand-in for the /api/departments endpoints. Set [error] to make
+/// the next call throw, which is how the failure paths get exercised.
 class FakeDepartmentRemoteDataSource implements DepartmentRemoteDataSource {
-  FakeDepartmentRemoteDataSource({List<DepartmentModel>? departments})
+  FakeDepartmentRemoteDataSource({List<DepartmentModel>? departments, this.error})
     : departments =
           departments ??
-          const [
-            DepartmentModel(id: 1, name: 'Engineering', employeeCount: 2),
-            DepartmentModel(id: 2, name: 'People Ops', employeeCount: 1),
+          [
+            const DepartmentModel(id: 1, name: 'Engineering', employeeCount: 2),
+            const DepartmentModel(id: 2, name: 'People Ops', employeeCount: 1),
           ];
 
-  final List<DepartmentModel> departments;
+  List<DepartmentModel> departments;
+  Object? error;
+
+  DepartmentRequestModel? lastCreate;
+  DepartmentRequestModel? lastUpdate;
+  int? deletedId;
+
+  int _nextId = 100;
+
+  void _throwIfPrimed() {
+    final pending = error;
+    if (pending != null) throw pending;
+  }
 
   @override
-  Future<List<DepartmentModel>> getDepartments() async => departments;
+  Future<List<DepartmentModel>> getDepartments() async {
+    _throwIfPrimed();
+    return departments;
+  }
+
+  @override
+  Future<DepartmentModel> createDepartment(DepartmentRequestModel body) async {
+    _throwIfPrimed();
+    lastCreate = body;
+
+    final created = DepartmentModel(
+      id: _nextId++,
+      name: body.name,
+      employeeCount: 0,
+    );
+    departments = [...departments, created];
+    return created;
+  }
+
+  @override
+  Future<DepartmentModel> updateDepartment(
+    int id,
+    DepartmentRequestModel body,
+  ) async {
+    _throwIfPrimed();
+    lastUpdate = body;
+
+    final existing = departments.firstWhere((d) => d.id == id);
+    final updated = existing.copyWith(name: body.name);
+    departments = [
+      for (final d in departments)
+        if (d.id == id) updated else d,
+    ];
+    return updated;
+  }
+
+  @override
+  Future<void> deleteDepartment(int id) async {
+    _throwIfPrimed();
+    deletedId = id;
+    departments = [
+      for (final d in departments)
+        if (d.id != id) d,
+    ];
+  }
 }
 
 EmployeeModel employeeModelFor({
