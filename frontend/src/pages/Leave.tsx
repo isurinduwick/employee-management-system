@@ -3,6 +3,7 @@ import { extractErrorMessage } from "../api/client";
 import { decideLeaveRequest, getLeaveRequests, submitLeaveRequest } from "../api/leave";
 import { getEmployees } from "../api/employees";
 import { useAuth } from "../auth/AuthContext";
+import { EmptyState } from "../components/EmptyState";
 import { Spinner } from "../components/Spinner";
 import { useToast } from "../components/Toast";
 import type { LeaveRequest, LeaveStatus, LeaveType } from "../types/leave";
@@ -129,7 +130,12 @@ export function Leave() {
   return (
     <div className="data-page leave-page">
       <div className="page-header">
-        <h1>Leave</h1>
+        <div>
+          <h1>Leave</h1>
+          <p className="page-subtitle">
+            {canReview ? "Submit your own requests and decide on your team's." : "Submit and track your leave requests."}
+          </p>
+        </div>
         {!showForm && (
           <button type="button" className="primary-button" onClick={() => setShowForm(true)}>
             New Leave Request
@@ -142,6 +148,11 @@ export function Leave() {
 
       {showForm && (
         <form className="leave-form" onSubmit={handleSubmit}>
+          <div className="leave-form-header">
+            <h2 className="panel-title">New leave request</h2>
+            <p className="panel-hint">Your manager is notified once you submit.</p>
+          </div>
+
           <div className="form-grid">
             <label>
               Leave type
@@ -219,62 +230,78 @@ export function Leave() {
       )}
 
       {requests === null && !loadError && <Spinner />}
-      {requests && requests.length === 0 && <p>No leave requests found.</p>}
+      {requests && requests.length === 0 && (
+        <EmptyState title="No leave requests found" hint="Submit a request, or clear the filters to see more." />
+      )}
 
       {requests && requests.length > 0 && (
-        <table className="data-table">
-          <thead>
-            <tr>
-              {canReview && <th>Employee</th>}
-              <th>Type</th>
-              <th>Dates</th>
-              <th>Reason</th>
-              <th>Status</th>
-              <th>Decided by</th>
-              {canReview && <th aria-label="Actions" />}
-            </tr>
-          </thead>
-          <tbody>
-            {requests.map((request) => (
-              <tr key={request.id}>
-                {canReview && <td>{request.employeeName}</td>}
-                <td>{request.leaveType}</td>
-                <td>
-                  {request.startDate} → {request.endDate}
-                </td>
-                <td>{request.reason ?? "—"}</td>
-                <td>
-                  <span className={"status-pill " + request.status.toLowerCase()}>{request.status}</span>
-                </td>
-                <td>{request.approvedByName ?? "—"}</td>
-                {canReview && (
-                  <td className="actions-cell">
-                    {request.status === "Pending" && canDecide(request) && (
-                      <>
-                        <button
-                          type="button"
-                          className="link-button"
-                          onClick={() => handleDecision(request, "Approved")}
-                          disabled={decidingId === request.id}
-                        >
-                          Approve
-                        </button>
-                        <button
-                          type="button"
-                          className="link-button danger"
-                          onClick={() => handleDecision(request, "Rejected")}
-                          disabled={decidingId === request.id}
-                        >
-                          Reject
-                        </button>
-                      </>
+        <div className="table-card">
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  {canReview && <th>Employee</th>}
+                  <th>Type</th>
+                  <th>Dates</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th>Decided by</th>
+                  {canReview && <th aria-label="Actions" />}
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((request) => (
+                  <tr key={request.id}>
+                    {canReview && <td>{request.employeeName}</td>}
+                    <td>{request.leaveType}</td>
+                    <td>
+                      <span className="leave-dates">
+                        {request.startDate}
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M5 12h13m0 0-4-4m4 4-4 4" />
+                        </svg>
+                        {request.endDate}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="leave-reason" title={request.reason ?? undefined}>
+                        {request.reason ?? "—"}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={"status-pill " + request.status.toLowerCase()}>{request.status}</span>
+                    </td>
+                    <td>{request.approvedByName ?? "—"}</td>
+                    {canReview && (
+                      <td className="actions-cell">
+                        {request.status === "Pending" && canDecide(request) && (
+                          <>
+                            <button
+                              type="button"
+                              className="link-button"
+                              onClick={() => handleDecision(request, "Approved")}
+                              disabled={decidingId === request.id}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              className="link-button danger"
+                              onClick={() => handleDecision(request, "Rejected")}
+                              disabled={decidingId === request.id}
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                      </td>
                     )}
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );

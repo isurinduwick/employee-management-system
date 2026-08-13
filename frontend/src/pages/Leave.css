@@ -1,61 +1,38 @@
-.leave-page {
-  max-width: 980px;
-}
+/* Panels, form grids and tables come from data-page.css — this file only holds
+   what's specific to the Leave screen. */
 
 .leave-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 18px 20px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: var(--shadow);
+  gap: 18px;
+  padding: 22px;
 }
 
-.leave-form .form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
-}
-
-.leave-form label {
+.leave-form-header {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  font-size: 12.5px;
-  font-weight: 500;
+  gap: 2px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.leave-dates {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.leave-dates svg {
+  color: var(--text-subtle);
+}
+
+/* Long free-text reasons shouldn't stretch the table out of shape. */
+.leave-reason {
+  display: block;
+  max-width: 26ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--text-muted);
-}
-
-.leave-form input,
-.leave-form select,
-.leave-form textarea {
-  font: inherit;
-  font-size: 14px;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
-  color: var(--text);
-  resize: vertical;
-}
-
-.leave-form input:focus-visible,
-.leave-form select:focus-visible,
-.leave-form textarea:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
-}
-
-.reason-field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.leave-form .form-actions {
-  display: flex;
-  gap: 10px;
 }
