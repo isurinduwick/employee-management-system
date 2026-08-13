@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/auth.dart';
 import '../state/auth_state.dart';
+import '../theme/app_colors.dart';
 import 'login_screen.dart';
 
 // Placeholder authenticated landing — the real dashboard/nav shell is a
@@ -15,8 +16,13 @@ class HomeScreen extends StatelessWidget {
     final session = context.watch<AuthState>().session!;
 
     return Scaffold(
+      backgroundColor: AppColors.bg,
       appBar: AppBar(
         title: const Text('EMS Mobile'),
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.text,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),

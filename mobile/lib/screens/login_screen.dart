@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../api/api_client.dart';
 import '../state/auth_state.dart';
+import '../theme/app_colors.dart';
 import 'home_screen.dart';
 
 const _emailPattern = r'^[^\s@]+@[^\s@]+\.[^\s@]+$';
@@ -90,85 +91,126 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-            child: Form(
-              key: _formKey,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Icon(Icons.business_center_rounded, size: 40, color: Color(0xFF4F46E5)),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Welcome back',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Sign in to continue to your workspace',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
-                  ),
-                  const SizedBox(height: 32),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    autofillHints: const [AutofillHints.username],
-                    maxLength: _emailMaxLength,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'you@company.com',
-                      counterText: '',
-                    ),
-                    validator: _validateEmail,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: !_showPassword,
-                    autofillHints: const [AutofillHints.password],
-                    maxLength: _passwordMaxLength,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: '••••••••',
-                      counterText: '',
-                      suffixIcon: IconButton(
-                        icon: Icon(_showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                        tooltip: _showPassword ? 'Hide password' : 'Show password',
-                        onPressed: () => setState(() => _showPassword = !_showPassword),
-                      ),
-                    ),
-                    validator: _validatePassword,
-                    onFieldSubmitted: (_) => _submit(),
-                  ),
-                  if (_formError != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.red.shade200),
-                      ),
-                      child: Text(
-                        _formError!,
-                        style: TextStyle(color: Colors.red.shade700),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _submitting ? null : _submit,
-                    child: _submitting
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white),
-                          )
-                        : const Text('Sign in'),
+            padding: const EdgeInsets.all(24),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 420),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 34),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.xl),
+                border: Border.all(color: AppColors.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.text.withValues(alpha: 0.08),
+                    blurRadius: 40,
+                    offset: const Offset(0, 18),
                   ),
                 ],
+              ),
+              child: Form(
+                key: _formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [AppColors.accent, Color(0xFF0B3F5F)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.accent.withValues(alpha: 0.35),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.business_center_rounded, size: 20, color: AppColors.accentContrast),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Welcome back',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.025,
+                            color: AppColors.text,
+                          ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'Sign in to continue to your workspace',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+                    ),
+                    const SizedBox(height: 28),
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      autofillHints: const [AutofillHints.username],
+                      maxLength: _emailMaxLength,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        hintText: 'you@company.com',
+                        counterText: '',
+                      ),
+                      validator: _validateEmail,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: !_showPassword,
+                      autofillHints: const [AutofillHints.password],
+                      maxLength: _passwordMaxLength,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        hintText: '••••••••',
+                        counterText: '',
+                        suffixIcon: IconButton(
+                          icon: Icon(_showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                          tooltip: _showPassword ? 'Hide password' : 'Show password',
+                          color: AppColors.textSubtle,
+                          onPressed: () => setState(() => _showPassword = !_showPassword),
+                        ),
+                      ),
+                      validator: _validatePassword,
+                      onFieldSubmitted: (_) => _submit(),
+                    ),
+                    if (_formError != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                        decoration: BoxDecoration(
+                          color: AppColors.dangerSoft,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(color: AppColors.danger.withValues(alpha: 0.28)),
+                        ),
+                        child: Text(
+                          _formError!,
+                          style: const TextStyle(color: AppColors.danger, fontSize: 13.5),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _submitting ? null : _submit,
+                      child: _submitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                                color: AppColors.accentContrast,
+                              ),
+                            )
+                          : const Text('Sign in'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
