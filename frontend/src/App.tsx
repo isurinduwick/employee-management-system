@@ -1,8 +1,19 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+import { ProtectedRoute } from "./auth/ProtectedRoute";
+import { Dashboard } from "./pages/Dashboard";
+import { Login } from "./pages/Login";
+
 function App() {
   return (
-    <main>
-      <h1>EMS Frontend</h1>
-    </main>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<Dashboard />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
