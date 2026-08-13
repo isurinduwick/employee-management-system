@@ -3,6 +3,8 @@ import { extractErrorMessage } from "../api/client";
 import { getDepartments } from "../api/departments";
 import { createEmployee, deactivateEmployee, getEmployees, updateEmployee } from "../api/employees";
 import { useAuth } from "../auth/AuthContext";
+import { Spinner } from "../components/Spinner";
+import { useToast } from "../components/Toast";
 import type { Role } from "../types/auth";
 import type { Department } from "../types/department";
 import type { Employee, EmployeeCreateRequest, EmployeeUpdateRequest } from "../types/employee";
@@ -39,6 +41,7 @@ const EMPTY_FORM: FormState = {
 
 export function Employees() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const canManage = user?.role === "Admin"; // reads are open to everyone; writes are Admin-only, same as the API
 
   const [employees, setEmployees] = useState<Employee[] | null>(null);
@@ -126,6 +129,7 @@ export function Employees() {
         };
         const created = await createEmployee(dto);
         setEmployees((prev) => [...(prev ?? []), created]);
+        showToast(`Employee "${created.firstName} ${created.lastName}" created.`);
       } else {
         const dto: EmployeeUpdateRequest = {
           firstName: form.firstName.trim(),
@@ -139,6 +143,7 @@ export function Employees() {
         };
         const updated = await updateEmployee(editingId, dto);
         setEmployees((prev) => prev?.map((e) => (e.id === editingId ? updated : e)) ?? null);
+        showToast(`Employee "${updated.firstName} ${updated.lastName}" updated.`);
       }
       closeForm();
     } catch (err) {
@@ -158,6 +163,7 @@ export function Employees() {
     try {
       await deactivateEmployee(employee.id);
       setEmployees((prev) => prev?.map((e) => (e.id === employee.id ? { ...e, isActive: false } : e)) ?? null);
+      showToast(`${employee.firstName} ${employee.lastName} deactivated.`);
     } catch (err) {
       setDeactivateError(extractErrorMessage(err, "Failed to deactivate employee."));
     } finally {
@@ -315,7 +321,7 @@ export function Employees() {
         </form>
       )}
 
-      {employees === null && !loadError && <p>Loading…</p>}
+      {employees === null && !loadError && <Spinner />}
 
       {employees && employees.length > 0 && (
         <table className="data-table">
