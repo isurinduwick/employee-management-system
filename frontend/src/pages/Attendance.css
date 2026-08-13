@@ -1,24 +1,61 @@
-.attendance-page {
-  max-width: 900px;
-}
+/* Panels and tables come from data-page.css — this file only holds the
+   check-in/check-out card. */
 
 .attendance-status-card {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 18px 20px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px;
 }
 
-.attendance-status-card p {
+.attendance-status-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.attendance-status-text {
+  flex: 1;
+  min-width: 200px;
+}
+
+.attendance-status-text p {
   margin: 0;
   font-size: 14.5px;
+  font-weight: 500;
+}
+
+.attendance-status-hint {
+  margin-top: 2px !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: var(--text-muted);
 }
 
 .attendance-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
+/* Errors span the full card rather than sitting in the middle of the row. */
+.attendance-status-card .page-alert {
+  flex-basis: 100%;
+}
+
+@media (max-width: 620px) {
+  .attendance-actions {
+    width: 100%;
+  }
+
+  .attendance-actions .primary-button,
+  .attendance-actions .secondary-button {
+    flex: 1;
+  }
+}

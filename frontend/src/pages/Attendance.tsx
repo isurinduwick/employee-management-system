@@ -4,6 +4,7 @@ import { extractErrorMessage } from "../api/client";
 import { getDepartments } from "../api/departments";
 import { getEmployees } from "../api/employees";
 import { useAuth } from "../auth/AuthContext";
+import { EmptyState } from "../components/EmptyState";
 import { Spinner } from "../components/Spinner";
 import { useToast } from "../components/Toast";
 import type { AttendanceLog } from "../types/attendance";
@@ -129,28 +130,45 @@ export function Attendance() {
   return (
     <div className="data-page attendance-page">
       <div className="page-header">
-        <h1>Attendance</h1>
+        <div>
+          <h1>Attendance</h1>
+          <p className="page-subtitle">Record today's hours and review past attendance.</p>
+        </div>
       </div>
 
       <div className="attendance-status-card">
-        {statusLoading ? (
-          <Spinner label="Loading today's status…" />
-        ) : todayRecord ? (
-          <p>
-            Checked in at <strong>{formatTime(todayRecord.checkInTime)}</strong>
-            {todayRecord.checkOutTime && (
-              <>
-                {" "}
-                — checked out at <strong>{formatTime(todayRecord.checkOutTime)}</strong>
-              </>
-            )}
-          </p>
-        ) : (
-          <p>You haven't checked in today.</p>
-        )}
+        <span className="attendance-status-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="8.5" />
+            <path d="M12 7.5V12l3 2" />
+          </svg>
+        </span>
 
-        {statusError && <p className="page-alert">{statusError}</p>}
-        {actionError && <p className="page-alert">{actionError}</p>}
+        <div className="attendance-status-text">
+          {statusLoading ? (
+            <Spinner label="Loading today's status…" />
+          ) : todayRecord ? (
+            <>
+              <p>
+                Checked in at <strong>{formatTime(todayRecord.checkInTime)}</strong>
+                {todayRecord.checkOutTime && (
+                  <>
+                    {" "}
+                    — checked out at <strong>{formatTime(todayRecord.checkOutTime)}</strong>
+                  </>
+                )}
+              </p>
+              <p className="attendance-status-hint">
+                {todayRecord.checkOutTime ? "Today's attendance is complete." : "Don't forget to check out."}
+              </p>
+            </>
+          ) : (
+            <>
+              <p>You haven't checked in today.</p>
+              <p className="attendance-status-hint">Check in to start recording today's hours.</p>
+            </>
+          )}
+        </div>
 
         <div className="attendance-actions">
           <button type="button" className="primary-button" onClick={handleCheckIn} disabled={!canCheckIn || actionSubmitting}>
@@ -160,6 +178,9 @@ export function Attendance() {
             {actionSubmitting ? "Working…" : "Check Out"}
           </button>
         </div>
+
+        {statusError && <p className="page-alert">{statusError}</p>}
+        {actionError && <p className="page-alert">{actionError}</p>}
       </div>
 
       {canFilterTeam && (
@@ -210,33 +231,41 @@ export function Attendance() {
       {historyError && <p className="page-alert">{historyError}</p>}
 
       {history === null && !historyError && <Spinner label="Loading history…" />}
-      {history && history.length === 0 && <p>No attendance records found.</p>}
+      {history && history.length === 0 && (
+        <EmptyState title="No attendance records found" hint="Try widening the date range or clearing the filters." />
+      )}
 
       {history && history.length > 0 && (
-        <table className="data-table">
-          <thead>
-            <tr>
-              {canFilterTeam && <th>Employee</th>}
-              <th>Date</th>
-              <th>Check In</th>
-              <th>Check Out</th>
-              <th>Status</th>
-              <th>Device</th>
-            </tr>
-          </thead>
-          <tbody>
-            {history.map((record) => (
-              <tr key={record.id}>
-                {canFilterTeam && <td>{record.employeeName}</td>}
-                <td>{record.workDate}</td>
-                <td>{formatTime(record.checkInTime)}</td>
-                <td>{formatTime(record.checkOutTime)}</td>
-                <td>{record.status}</td>
-                <td>{record.deviceType}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="table-card">
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  {canFilterTeam && <th>Employee</th>}
+                  <th>Date</th>
+                  <th>Check In</th>
+                  <th>Check Out</th>
+                  <th>Status</th>
+                  <th>Device</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((record) => (
+                  <tr key={record.id}>
+                    {canFilterTeam && <td>{record.employeeName}</td>}
+                    <td>{record.workDate}</td>
+                    <td>{formatTime(record.checkInTime)}</td>
+                    <td>{formatTime(record.checkOutTime)}</td>
+                    <td>
+                      <span className={"status-pill " + record.status.toLowerCase()}>{record.status}</span>
+                    </td>
+                    <td>{record.deviceType}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );
