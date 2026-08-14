@@ -1,17 +1,47 @@
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using backend.Data;
 using backend.Helpers;
+using backend.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Employee Management System API",
+        Version = "v1",
+        Description = "REST API backing the Employee Management System's web and mobile clients, covering three modules: " +
+            "employee & identity (employee/department records and JWT login with Admin/Manager/Employee roles), " +
+            "attendance (self-service daily check-in/check-out and history), and " +
+            "leave (leave requests and the Manager/Admin approval workflow)."
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT bearer token. Obtain one from POST /api/auth/login, then paste just the token here " +
+            "(Swagger UI adds the 'Bearer ' prefix for you)."
+    });
+    options.OperationFilter<AuthorizeOperationFilter>();
+
+    // Controller XML <summary> comments become the description shown above each
+    // tag's operation group in Swagger UI (Auth, Employees, Departments, Attendance, LeaveRequests).
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFile), includeControllerXmlComments: true);
+});
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
