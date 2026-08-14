@@ -38,14 +38,14 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<LoginResponseDto>> Login(LoginRequestDto request)
     {
         var employee = await _db.Employees.FirstOrDefaultAsync(e => e.Email == request.Email);
 
         if (employee is null || !employee.IsActive || !PasswordHasher.Verify(request.Password, employee.PasswordHash))
         {
-            return Unauthorized("Invalid email or password.");
+            return Problem(detail: "Invalid email or password.", statusCode: StatusCodes.Status401Unauthorized);
         }
 
         // The token carries everything downstream code needs (id, name, role) — no

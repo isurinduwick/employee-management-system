@@ -45,7 +45,7 @@ public class AttendanceController : ControllerBase
     [ProducesResponseType(typeof(AttendanceResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AttendanceResponseDto>> CheckIn(CheckInDto dto)
     {
         var employeeId = CurrentEmployeeId;
@@ -58,7 +58,7 @@ public class AttendanceController : ControllerBase
 
         if (alreadyCheckedIn)
         {
-            return Conflict("Already checked in today.");
+            return Problem(detail: "Already checked in today.", statusCode: StatusCodes.Status409Conflict);
         }
 
         var log = new AttendanceLog
@@ -88,9 +88,9 @@ public class AttendanceController : ControllerBase
     /// </remarks>
     [HttpPost("check-out")]
     [ProducesResponseType(typeof(AttendanceResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AttendanceResponseDto>> CheckOut()
     {
         var employeeId = CurrentEmployeeId;
@@ -101,12 +101,12 @@ public class AttendanceController : ControllerBase
 
         if (log is null)
         {
-            return BadRequest("You haven't checked in today.");
+            return Problem(detail: "You haven't checked in today.", statusCode: StatusCodes.Status400BadRequest);
         }
 
         if (log.CheckOutTime is not null)
         {
-            return Conflict("Already checked out today.");
+            return Problem(detail: "Already checked out today.", statusCode: StatusCodes.Status409Conflict);
         }
 
         log.CheckOutTime = DateTime.UtcNow;

@@ -89,16 +89,19 @@ public class EmployeesController : ControllerBase
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<EmployeeResponseDto>> Create(EmployeeCreateDto dto)
     {
         var (department, manager, error) = await ValidateRelationsAsync(dto.DepartmentId, dto.ManagerId);
         if (error is not null) return error;
 
-        if (await EmailInUseAsync(dto.Email)) return Conflict($"Email '{dto.Email}' is already in use.");
+        if (await EmailInUseAsync(dto.Email))
+        {
+            return Problem(detail: $"Email '{dto.Email}' is already in use.", statusCode: StatusCodes.Status409Conflict);
+        }
         if (await _db.Employees.AnyAsync(e => e.EmployeeCode == dto.EmployeeCode))
         {
-            return Conflict($"Employee code '{dto.EmployeeCode}' is already in use.");
+            return Problem(detail: $"Employee code '{dto.EmployeeCode}' is already in use.", statusCode: StatusCodes.Status409Conflict);
         }
 
         var employee = new Employee
@@ -143,7 +146,7 @@ public class EmployeesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<EmployeeResponseDto>> Update(int id, EmployeeUpdateDto dto)
     {
         var employee = await WithRelations.FirstOrDefaultAsync(e => e.Id == id);
@@ -152,7 +155,10 @@ public class EmployeesController : ControllerBase
         var (department, manager, error) = await ValidateRelationsAsync(dto.DepartmentId, dto.ManagerId, selfId: id);
         if (error is not null) return error;
 
-        if (await EmailInUseAsync(dto.Email, excludeId: id)) return Conflict($"Email '{dto.Email}' is already in use.");
+        if (await EmailInUseAsync(dto.Email, excludeId: id))
+        {
+            return Problem(detail: $"Email '{dto.Email}' is already in use.", statusCode: StatusCodes.Status409Conflict);
+        }
 
         employee.FirstName = dto.FirstName;
         employee.LastName = dto.LastName;
@@ -206,13 +212,13 @@ public class EmployeesController : ControllerBase
     {
         if (managerId.HasValue && managerId == selfId)
         {
-            return (null, null, BadRequest("An employee cannot be their own manager."));
+            return (null, null, Problem(detail: "An employee cannot be their own manager.", statusCode: StatusCodes.Status400BadRequest));
         }
 
         var department = await _db.Departments.FindAsync(departmentId);
         if (department is null)
         {
-            return (null, null, BadRequest($"Department {departmentId} does not exist."));
+            return (null, null, Problem(detail: $"Department {departmentId} does not exist.", statusCode: StatusCodes.Status400BadRequest));
         }
 
         Employee? manager = null;
@@ -221,7 +227,7 @@ public class EmployeesController : ControllerBase
             manager = await _db.Employees.FindAsync(managerId.Value);
             if (manager is null)
             {
-                return (null, null, BadRequest($"Manager {managerId} does not exist."));
+                return (null, null, Problem(detail: $"Manager {managerId} does not exist.", statusCode: StatusCodes.Status400BadRequest));
             }
         }
 

@@ -48,7 +48,7 @@ public class LeaveRequestsController : ControllerBase
     {
         if (dto.EndDate < dto.StartDate)
         {
-            return BadRequest("EndDate cannot be before StartDate.");
+            return Problem(detail: "EndDate cannot be before StartDate.", statusCode: StatusCodes.Status400BadRequest);
         }
 
         var leaveRequest = new LeaveRequest
@@ -130,16 +130,16 @@ public class LeaveRequestsController : ControllerBase
     [HttpPut("{id:int}/decision")]
     [Authorize(Roles = "Manager,Admin")]
     [ProducesResponseType(typeof(LeaveResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<LeaveResponseDto>> Decide(int id, LeaveDecisionDto dto)
     {
         if (dto.Status == LeaveStatus.Pending)
         {
-            return BadRequest("Decision must be Approved or Rejected.");
+            return Problem(detail: "Decision must be Approved or Rejected.", statusCode: StatusCodes.Status400BadRequest);
         }
 
         var leaveRequest = await _db.LeaveRequests
@@ -150,12 +150,12 @@ public class LeaveRequestsController : ControllerBase
 
         if (leaveRequest.Status != LeaveStatus.Pending)
         {
-            return Conflict("This leave request has already been decided.");
+            return Problem(detail: "This leave request has already been decided.", statusCode: StatusCodes.Status409Conflict);
         }
 
         if (User.IsInRole("Manager") && leaveRequest.Employee.ManagerId != CurrentEmployeeId)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, "You can only decide on your own team's leave requests.");
+            return Problem(detail: "You can only decide on your own team's leave requests.", statusCode: StatusCodes.Status403Forbidden);
         }
 
         leaveRequest.Status = dto.Status;
