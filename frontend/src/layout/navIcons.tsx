@@ -16,7 +16,6 @@ const DashboardIcon = () => base(<><rect x="3" y="3" width="8" height="8" rx="1.
 const EmployeesIcon = () => base(<><circle cx="12" cy="8" r="3.2" /><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6" /></>);
 const DepartmentsIcon = () => base(<><path d="M4 21V8l8-4.5L20 8v13" /><path d="M9 21v-6h6v6M9 12h.01M15 12h.01M9 9h.01M15 9h.01" /></>);
 const AttendanceIcon = () => base(<><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></>);
-const TeamIcon = () => base(<><circle cx="9" cy="8" r="3" /><circle cx="17" cy="9" r="2.4" /><path d="M3.5 20c0-3 2.5-5.2 5.5-5.2s5.5 2.2 5.5 5.2M15.8 14.6c2.4.3 4.2 2.2 4.2 4.7" /></>);
 const LeaveIcon = () => base(<><rect x="3.5" y="4.5" width="17" height="16" rx="2" /><path d="M3.5 9.5h17M8 3v3M16 3v3" /></>);
 const ApprovalsIcon = () => base(<><rect x="3.5" y="4.5" width="17" height="16" rx="2" /><path d="M3.5 9.5h17M8 3v3M16 3v3M8.5 14.5l2.2 2.2 4.3-4.3" /></>);
 
@@ -25,7 +24,6 @@ const ICONS_BY_PATH: Record<string, () => ReactElement> = {
   "/employees": EmployeesIcon,
   "/departments": DepartmentsIcon,
   "/attendance": AttendanceIcon,
-  "/attendance/team": TeamIcon,
   "/leave": LeaveIcon,
   "/leave/approvals": ApprovalsIcon,
 };
