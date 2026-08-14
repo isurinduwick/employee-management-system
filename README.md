@@ -74,6 +74,16 @@ Backend configuration lives in `backend/appsettings.json` (and `backend/appsetti
 | `Jwt:ExpiryMinutes` | How long an issued token stays valid |
 | `Cors:AllowedOrigins` | Origins allowed to call the API from a browser (the web client's dev URLs) |
 
+`ConnectionStrings:DefaultConnection` and `Jwt:Key` are secrets, so `appsettings.json` ships with them blank rather than committed to source control. Set them locally with the [.NET Secret Manager](https://learn.microsoft.com/aspnet/core/security/app-secrets) (stored outside the repo, only on your machine):
+
+```bash
+cd backend
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=ems_db;Username=postgres;Password=your-password"
+dotnet user-secrets set "Jwt:Key" "your-own-random-32+-character-value"
+```
+
+In production, set the equivalent environment variables instead (`ConnectionStrings__DefaultConnection`, `Jwt__Key`) — ASP.NET Core's configuration system maps `__` to the same nested keys.
+
 The mobile client's API base URL is set in `mobile/lib/core/network/api_host.dart` (`localhost` by default, override with `--dart-define=API_BASE_URL=...`); the web client's is set via `VITE_API_BASE_URL` in `frontend/.env`.
 
 ## Default accounts

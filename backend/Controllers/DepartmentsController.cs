@@ -90,12 +90,12 @@ public class DepartmentsController : ControllerBase
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<DepartmentResponseDto>> Create(DepartmentCreateDto dto)
     {
         if (await _db.Departments.AnyAsync(d => d.Name == dto.Name))
         {
-            return Conflict($"Department '{dto.Name}' already exists.");
+            return Problem(detail: $"Department '{dto.Name}' already exists.", statusCode: StatusCodes.Status409Conflict);
         }
 
         var department = new Department { Name = dto.Name };
@@ -122,7 +122,7 @@ public class DepartmentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<DepartmentResponseDto>> Update(int id, DepartmentUpdateDto dto)
     {
         var department = await _db.Departments.FindAsync(id);
@@ -130,7 +130,7 @@ public class DepartmentsController : ControllerBase
 
         if (await _db.Departments.AnyAsync(d => d.Name == dto.Name && d.Id != id))
         {
-            return Conflict($"Department '{dto.Name}' already exists.");
+            return Problem(detail: $"Department '{dto.Name}' already exists.", statusCode: StatusCodes.Status409Conflict);
         }
 
         department.Name = dto.Name;
@@ -156,7 +156,7 @@ public class DepartmentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(int id)
     {
         var department = await _db.Departments.FindAsync(id);
@@ -164,7 +164,7 @@ public class DepartmentsController : ControllerBase
 
         if (await _db.Employees.AnyAsync(e => e.DepartmentId == id))
         {
-            return Conflict("Cannot delete a department that still has employees assigned to it.");
+            return Problem(detail: "Cannot delete a department that still has employees assigned to it.", statusCode: StatusCodes.Status409Conflict);
         }
 
         _db.Departments.Remove(department);

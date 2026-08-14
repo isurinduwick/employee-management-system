@@ -19,21 +19,19 @@ ASP.NET Core Web API for the Enterprise Employee Management System — employee/
 
 ## Setup
 
-1. **Configure the database connection**
+1. **Configure the database connection and JWT signing key**
 
-   Edit `appsettings.json` (or `appsettings.Development.json`) and set your own PostgreSQL credentials:
+   These two values are secrets, so `appsettings.json` ships with them blank rather than committed to source control. Set them locally with the [.NET Secret Manager](https://learn.microsoft.com/aspnet/core/security/app-secrets) — it stores values outside the repo (in your user profile), not in a tracked file:
 
-   ```json
-   "ConnectionStrings": {
-     "DefaultConnection": "Host=localhost;Port=5432;Database=ems_db;Username=postgres;Password=your-password"
-   }
+   ```bash
+   dotnet user-secrets init
+   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=ems_db;Username=postgres;Password=your-password"
+   dotnet user-secrets set "Jwt:Key" "your-own-random-32+-character-value"
    ```
 
-2. **Set a JWT signing key**
+   In production, set the equivalent environment variables instead (`ConnectionStrings__DefaultConnection`, `Jwt__Key`) — ASP.NET Core maps `__` to the same nested config keys.
 
-   Replace the placeholder `Jwt:Key` in `appsettings.json` with your own random secret (32+ characters). Never commit a real production secret — for local development the checked-in value is fine to reuse or replace.
-
-3. **Restore and apply the database migrations**
+2. **Restore and apply the database migrations**
 
    ```bash
    dotnet restore
@@ -42,7 +40,7 @@ ASP.NET Core Web API for the Enterprise Employee Management System — employee/
 
    This creates all four tables (`Departments`, `Employees`, `AttendanceLogs`, `LeaveRequests`) in the configured database. A plain-SQL equivalent is also checked in at [`schema.sql`](./schema.sql) if you'd rather apply it directly instead of using EF migrations.
 
-4. **Run the API**
+3. **Run the API**
 
    ```bash
    dotnet run
@@ -54,7 +52,7 @@ ASP.NET Core Web API for the Enterprise Employee Management System — employee/
 
 ## Configuration keys
 
-All configuration lives in `appsettings.json` (and `appsettings.Development.json` for environment overrides):
+All configuration lives in `appsettings.json` (and `appsettings.Development.json` for environment overrides). `ConnectionStrings:DefaultConnection` and `Jwt:Key` are blank there and must be supplied via user-secrets locally or environment variables in production (see [Setup](#setup) above):
 
 | Key | Purpose |
 |---|---|

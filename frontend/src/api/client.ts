@@ -39,16 +39,17 @@ apiClient.interceptors.response.use(
   },
 );
 
-// Controller actions like Conflict("...")/BadRequest("...") return the message
-// as a raw JSON string body; validation failures instead return a
-// ProblemDetails object with a `title`. This normalizes both into one string
-// so every page can show a real backend message instead of a generic one.
+// Every error response is now a ProblemDetails object (RFC 9110 problem+json).
+// The specific message lives in `detail` (e.g. "Email already in use.");
+// `title` is just the generic reason phrase for the status code (e.g.
+// "Conflict"), so it's only a fallback when a message wasn't set explicitly.
 export function extractErrorMessage(err: unknown, fallback: string): string {
   if (axios.isAxiosError(err)) {
     const data = err.response?.data;
-    if (typeof data === "string") return data;
-    if (data && typeof data === "object" && "title" in data) {
-      return String((data as { title: unknown }).title);
+    if (data && typeof data === "object") {
+      const problem = data as { detail?: unknown; title?: unknown };
+      if (typeof problem.detail === "string") return problem.detail;
+      if (typeof problem.title === "string") return problem.title;
     }
   }
   return fallback;
