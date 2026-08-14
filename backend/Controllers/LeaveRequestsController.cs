@@ -8,9 +8,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers;
 
+/// <summary>
+/// Leave requests and the Manager/Admin approval workflow.
+/// </summary>
 [ApiController]
 [Route("api/leave-requests")]
 [Authorize]
+[Produces("application/json")]
 public class LeaveRequestsController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
@@ -28,7 +32,18 @@ public class LeaveRequestsController : ControllerBase
 
     // POST /api/leave-requests — any authenticated role. Always created as Pending;
     // only the decision endpoint (Manager/Admin) can move it to Approved/Rejected.
+    /// <summary>
+    /// Submits a new leave request for the authenticated employee.
+    /// </summary>
+    /// <remarks>
+    /// Any authenticated role. Always created for the caller's own id (from the JWT) and always
+    /// starts as <c>Pending</c> — only the decision endpoint can move it to
+    /// <c>Approved</c>/<c>Rejected</c>. Returns 400 if <c>EndDate</c> is before <c>StartDate</c>.
+    /// </remarks>
     [HttpPost]
+    [ProducesResponseType(typeof(LeaveResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<LeaveResponseDto>> Create(LeaveRequestCreateDto dto)
     {
         if (dto.EndDate < dto.StartDate)
@@ -55,7 +70,19 @@ public class LeaveRequestsController : ControllerBase
     // GET /api/leave-requests?employeeId=&status= — an Employee only ever sees their
     // own requests (employeeId from the query string is ignored for that role, same
     // rule as Attendance's history endpoint); Manager/Admin can filter across everyone.
+    /// <summary>
+    /// Lists leave requests, optionally filtered by employee and status.
+    /// </summary>
+    /// <remarks>
+    /// Role-scoped visibility: an <c>Employee</c> always sees only their own requests — the
+    /// <paramref name="employeeId"/> filter is silently ignored for that role, same rule as
+    /// Attendance's history endpoint. <c>Manager</c>/<c>Admin</c> may filter across everyone's
+    /// requests. <paramref name="status"/> (<c>Pending</c>/<c>Approved</c>/<c>Rejected</c>)
+    /// applies to every role.
+    /// </remarks>
     [HttpGet]
+    [ProducesResponseType(typeof(List<LeaveResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<List<LeaveResponseDto>>> GetAll(
         [FromQuery] int? employeeId,
         [FromQuery] LeaveStatus? status)
@@ -90,8 +117,24 @@ public class LeaveRequestsController : ControllerBase
     // PUT /api/leave-requests/5/decision — Manager or Admin. A Manager may only decide
     // on their own direct reports' requests (checked via Employee.ManagerId); Admin can
     // decide on anyone's. One decision per request — a second call is rejected with 409.
+    /// <summary>
+    /// Approves or rejects a pending leave request.
+    /// </summary>
+    /// <remarks>
+    /// Manager or Admin only. A <c>Manager</c> may only decide on their own direct reports'
+    /// requests (checked via the employee's <c>ManagerId</c>) — deciding on someone outside their
+    /// team returns 403; <c>Admin</c> can decide on anyone's. <c>Status</c> must be
+    /// <c>Approved</c> or <c>Rejected</c> (400 for <c>Pending</c>). Only one decision is allowed
+    /// per request — deciding on a request that isn't currently <c>Pending</c> returns 409.
+    /// </remarks>
     [HttpPut("{id:int}/decision")]
     [Authorize(Roles = "Manager,Admin")]
+    [ProducesResponseType(typeof(LeaveResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<LeaveResponseDto>> Decide(int id, LeaveDecisionDto dto)
     {
         if (dto.Status == LeaveStatus.Pending)

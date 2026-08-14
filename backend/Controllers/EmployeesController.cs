@@ -11,9 +11,13 @@ namespace backend.Controllers;
 // [Authorize] at class level: every action requires a valid JWT by default.
 // Individual write actions add [Authorize(Roles = "Admin")] on top to further
 // restrict who can call them; reads stay open to any authenticated role.
+/// <summary>
+/// Employee directory: profiles, roles, department assignment, and the manager hierarchy.
+/// </summary>
 [ApiController]
 [Route("api/employees")]
 [Authorize]
+[Produces("application/json")]
 public class EmployeesController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
@@ -30,7 +34,15 @@ public class EmployeesController : ControllerBase
         _db.Employees.Include(e => e.Department).Include(e => e.Manager);
 
     // GET /api/employees?departmentId=2 — list everyone, optionally scoped to one department.
+    /// <summary>
+    /// Lists employees, optionally filtered to a single department.
+    /// </summary>
+    /// <remarks>
+    /// Any authenticated role (Admin, Manager, or Employee) may call this.
+    /// </remarks>
     [HttpGet]
+    [ProducesResponseType(typeof(List<EmployeeResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<List<EmployeeResponseDto>>> GetAll([FromQuery] int? departmentId)
     {
         var query = WithRelations;
@@ -44,7 +56,17 @@ public class EmployeesController : ControllerBase
     }
 
     // GET /api/employees/5 — a single employee, or 404 if the id doesn't exist.
+    /// <summary>
+    /// Gets a single employee by id.
+    /// </summary>
+    /// <remarks>
+    /// Any authenticated role may call this. The response includes the employee's manager
+    /// (via <c>ManagerId</c>/<c>ManagerName</c>), part of the self-referencing manager hierarchy.
+    /// </remarks>
     [HttpGet("{id:int}")]
+    [ProducesResponseType(typeof(EmployeeResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<EmployeeResponseDto>> GetById(int id)
     {
         var employee = await WithRelations.FirstOrDefaultAsync(e => e.Id == id);
@@ -53,8 +75,21 @@ public class EmployeesController : ControllerBase
 
     // POST /api/employees — Admin only. Creates a brand-new login: hashes the
     // plaintext password from the DTO before it ever touches the database.
+    /// <summary>
+    /// Creates a new employee (and their login).
+    /// </summary>
+    /// <remarks>
+    /// Admin only. <c>DepartmentId</c> and, if provided, <c>ManagerId</c> must reference
+    /// existing employees/departments (400 otherwise), and an employee cannot be created as
+    /// their own manager. A duplicate <c>Email</c> or <c>EmployeeCode</c> returns 409.
+    /// </remarks>
     [HttpPost]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(EmployeeResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<EmployeeResponseDto>> Create(EmployeeCreateDto dto)
     {
         var (department, manager, error) = await ValidateRelationsAsync(dto.DepartmentId, dto.ManagerId);
@@ -92,8 +127,23 @@ public class EmployeesController : ControllerBase
 
     // PUT /api/employees/5 — Admin only. No password field here on purpose (see
     // EmployeeUpdateDto) — changing a password is a separate, dedicated flow.
+    /// <summary>
+    /// Updates an existing employee's profile, department, role, manager, and active status.
+    /// </summary>
+    /// <remarks>
+    /// Admin only. Does not change the password (there is no dedicated password-change endpoint
+    /// yet). Same <c>DepartmentId</c>/<c>ManagerId</c> validation as create, plus an employee
+    /// cannot be set as their own manager. A duplicate <c>Email</c> (belonging to another
+    /// employee) returns 409.
+    /// </remarks>
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(EmployeeResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<EmployeeResponseDto>> Update(int id, EmployeeUpdateDto dto)
     {
         var employee = await WithRelations.FirstOrDefaultAsync(e => e.Id == id);
@@ -122,8 +172,20 @@ public class EmployeesController : ControllerBase
     // DELETE /api/employees/5 — Admin only. Soft delete: attendance/leave history
     // stays intact, the employee simply stops being able to log in / show up in
     // active lists (IsActive = false), instead of removing the row outright.
+    /// <summary>
+    /// Deactivates an employee.
+    /// </summary>
+    /// <remarks>
+    /// Admin only. This is a soft delete — sets <c>IsActive = false</c> rather than removing the
+    /// row, so attendance and leave history are preserved and the employee can still appear as a
+    /// historical manager/approver.
+    /// </remarks>
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Deactivate(int id)
     {
         var employee = await _db.Employees.FindAsync(id);

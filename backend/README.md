@@ -77,7 +77,7 @@ Log in via `POST /api/auth/login` with `{ "email": ..., "password": ... }` to ge
 
 ## API overview
 
-Full interactive documentation is available via Swagger UI at `/swagger` once the app is running. Summary:
+Full interactive documentation is available via Swagger UI at `http://localhost:5133/swagger` once the app is running (`dotnet run` opens it automatically). Summary:
 
 | Resource | Endpoints |
 |---|---|
@@ -86,6 +86,25 @@ Full interactive documentation is available via Swagger UI at `/swagger` once th
 | Employees | `GET`, `GET /{id}`, `POST`, `PUT /{id}`, `DELETE /{id}` — writes require `Admin` |
 | Attendance | `POST /check-in`, `POST /check-out`, `GET` (filter by `employeeId`, `departmentId`, `startDate`, `endDate`) |
 | Leave requests | `POST`, `GET` (filter by `employeeId`, `status`), `PUT /{id}/decision` — decision requires `Manager` or `Admin` |
+
+### Using the Authorize button
+
+Every endpoint except `POST /api/auth/login` requires a JWT:
+
+1. In Swagger UI, expand **Auth → POST /api/auth/login**, "Try it out", and submit one of the [seeded accounts](#default-seeded-accounts) above. Copy the `token` field from the response.
+2. Click the **Authorize** button (top right of the page), paste just the token (no `Bearer ` prefix — Swagger UI adds that for you) into the `Bearer` field, and confirm.
+3. Every subsequent "Try it out" call now sends `Authorization: Bearer <token>` automatically. Endpoints your logged-in role can't call still return `403 Forbidden`, same as via any other client.
+
+### Reading the API without running the project
+
+A static snapshot of the generated OpenAPI document is checked in at [`../docs/openapi.json`](../docs/openapi.json) — open it directly, or paste it into [editor.swagger.io](https://editor.swagger.io), without starting the API or a database.
+
+To regenerate it after changing an endpoint, run the app once and pull the live document:
+
+```bash
+dotnet run &
+curl http://localhost:5133/swagger/v1/swagger.json -o ../docs/openapi.json
+```
 
 ## Running tests
 

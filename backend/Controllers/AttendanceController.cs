@@ -8,9 +8,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers;
 
+/// <summary>
+/// Daily attendance: self-service check-in/check-out and history.
+/// </summary>
 [ApiController]
 [Route("api/attendance")]
 [Authorize]
+[Produces("application/json")]
 public class AttendanceController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
@@ -28,7 +32,20 @@ public class AttendanceController : ControllerBase
     private string CurrentEmployeeName => User.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
 
     // POST /api/attendance/check-in — any authenticated role, always for yourself.
+    /// <summary>
+    /// Checks the authenticated employee in for today.
+    /// </summary>
+    /// <remarks>
+    /// Any authenticated role. Always acts on the caller's own id (from the JWT) — there is no
+    /// way to check someone else in. <c>DeviceType</c> records where the check-in came from
+    /// (<c>Web</c> or <c>Mobile</c>). Only one check-in per employee per calendar day is allowed;
+    /// a second attempt returns 409.
+    /// </remarks>
     [HttpPost("check-in")]
+    [ProducesResponseType(typeof(AttendanceResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AttendanceResponseDto>> CheckIn(CheckInDto dto)
     {
         var employeeId = CurrentEmployeeId;
@@ -61,7 +78,19 @@ public class AttendanceController : ControllerBase
 
     // POST /api/attendance/check-out — updates today's existing row (from check-in),
     // it never creates a new one; that's what the unique (EmployeeId, WorkDate) index enforces.
+    /// <summary>
+    /// Checks the authenticated employee out for today.
+    /// </summary>
+    /// <remarks>
+    /// Any authenticated role. Takes no request body — it closes the caller's own currently-open
+    /// attendance record for today (the row created by check-in), rather than creating a new one.
+    /// Returns 400 if the caller hasn't checked in today, and 409 if they've already checked out.
+    /// </remarks>
     [HttpPost("check-out")]
+    [ProducesResponseType(typeof(AttendanceResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AttendanceResponseDto>> CheckOut()
     {
         var employeeId = CurrentEmployeeId;
@@ -91,7 +120,20 @@ public class AttendanceController : ControllerBase
     // their own history: employeeId/departmentId from the query string are ignored
     // for that role rather than trusted, since the caller could pass anyone's id.
     // Manager/Admin can filter freely across the whole company.
+    /// <summary>
+    /// Lists attendance records, optionally filtered by employee, department, and date range.
+    /// </summary>
+    /// <remarks>
+    /// Role-scoped visibility: an <c>Employee</c> always sees only their own records — the
+    /// <paramref name="employeeId"/> and <paramref name="departmentId"/> filters are silently
+    /// ignored for that role rather than honoured, since the caller could otherwise pass anyone's
+    /// id. <c>Manager</c>/<c>Admin</c> may filter freely across the whole company.
+    /// <paramref name="startDate"/>/<paramref name="endDate"/> are inclusive on both ends and
+    /// apply to every role.
+    /// </remarks>
     [HttpGet]
+    [ProducesResponseType(typeof(List<AttendanceResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<List<AttendanceResponseDto>>> GetAll(
         [FromQuery] int? employeeId,
         [FromQuery] int? departmentId,
