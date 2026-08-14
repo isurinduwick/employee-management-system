@@ -20,7 +20,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Employees", path: "/employees", group: "People", roles: ["Admin"] },
   { label: "Departments", path: "/departments", group: "People", roles: ["Admin"] },
   { label: "Attendance", path: "/attendance", group: "Time & Leave", roles: ["Admin", "Manager", "Employee"] },
-  { label: "Team Attendance", path: "/attendance/team", group: "Time & Leave", roles: ["Admin", "Manager"] },
   { label: "Leave", path: "/leave", group: "Time & Leave", roles: ["Admin", "Manager", "Employee"] },
   { label: "Leave Approvals", path: "/leave/approvals", group: "Time & Leave", roles: ["Admin", "Manager"] },
 ];
